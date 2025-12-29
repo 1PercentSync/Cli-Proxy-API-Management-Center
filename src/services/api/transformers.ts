@@ -83,13 +83,18 @@ const normalizeApiKeyEntry = (entry: any): ApiKeyEntry | null => {
   if (!trimmed) return null;
 
   const proxyUrl = entry['proxy-url'] ?? entry.proxyUrl;
+  const priority = entry.priority ?? entry['priority'];
   const headers = normalizeHeaders(entry.headers);
 
-  return {
+  const result: ApiKeyEntry = {
     apiKey: trimmed,
     proxyUrl: proxyUrl ? String(proxyUrl) : undefined,
     headers
   };
+  if (priority !== undefined) {
+    result.priority = Number(priority);
+  }
+  return result;
 };
 
 const normalizeProviderKeyConfig = (item: any): ProviderKeyConfig | null => {
@@ -103,8 +108,10 @@ const normalizeProviderKeyConfig = (item: any): ProviderKeyConfig | null => {
   if (prefix) config.prefix = prefix;
   const baseUrl = item['base-url'] ?? item.baseUrl;
   const proxyUrl = item['proxy-url'] ?? item.proxyUrl;
+  const priority = item.priority ?? item['priority'];
   if (baseUrl) config.baseUrl = String(baseUrl);
   if (proxyUrl) config.proxyUrl = String(proxyUrl);
+  if (priority !== undefined) config.priority = Number(priority);
   const headers = normalizeHeaders(item.headers);
   if (headers) config.headers = headers;
   const models = normalizeModelAliases(item.models);
@@ -129,7 +136,9 @@ const normalizeGeminiKeyConfig = (item: any): GeminiKeyConfig | null => {
   const prefix = normalizePrefix(item.prefix ?? item['prefix']);
   if (prefix) config.prefix = prefix;
   const baseUrl = item['base-url'] ?? item.baseUrl ?? item['base_url'];
+  const priority = item.priority ?? item['priority'];
   if (baseUrl) config.baseUrl = String(baseUrl);
+  if (priority !== undefined) config.priority = Number(priority);
   const headers = normalizeHeaders(item.headers);
   if (headers) config.headers = headers;
   const excludedModels = normalizeExcludedModels(item['excluded-models'] ?? item.excludedModels);

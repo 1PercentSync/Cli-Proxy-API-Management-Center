@@ -162,6 +162,7 @@ const getOpenAIProviderStats = (
 const buildApiKeyEntry = (input?: Partial<ApiKeyEntry>): ApiKeyEntry => ({
   apiKey: input?.apiKey ?? '',
   proxyUrl: input?.proxyUrl ?? '',
+  priority: input?.priority,
   headers: input?.headers ?? {},
 });
 
@@ -227,6 +228,7 @@ export function AiProvidersPage() {
     apiKey: '',
     prefix: '',
     baseUrl: '',
+    priority: undefined,
     headers: {},
     excludedModels: [],
     excludedText: '',
@@ -238,6 +240,7 @@ export function AiProvidersPage() {
     prefix: '',
     baseUrl: '',
     proxyUrl: '',
+    priority: undefined,
     headers: {},
     models: [],
     excludedModels: [],
@@ -360,6 +363,7 @@ export function AiProvidersPage() {
       apiKey: '',
       prefix: '',
       baseUrl: '',
+      priority: undefined,
       headers: {},
       excludedModels: [],
       excludedText: '',
@@ -369,6 +373,7 @@ export function AiProvidersPage() {
       prefix: '',
       baseUrl: '',
       proxyUrl: '',
+      priority: undefined,
       headers: {},
       models: [],
       excludedModels: [],
@@ -796,6 +801,7 @@ export function AiProvidersPage() {
         apiKey: geminiForm.apiKey.trim(),
         prefix: geminiForm.prefix?.trim() || undefined,
         baseUrl: geminiForm.baseUrl?.trim() || undefined,
+        priority: geminiForm.priority,
         headers: buildHeaderObject(headersToEntries(geminiForm.headers as any)),
         excludedModels: parseExcludedModels(geminiForm.excludedText),
       };
@@ -942,6 +948,7 @@ export function AiProvidersPage() {
         prefix: providerForm.prefix?.trim() || undefined,
         baseUrl,
         proxyUrl: providerForm.proxyUrl?.trim() || undefined,
+        priority: providerForm.priority,
         headers: buildHeaderObject(headersToEntries(providerForm.headers as any)),
         models: entriesToModels(providerForm.modelEntries),
         excludedModels: parseExcludedModels(providerForm.excludedText),
@@ -1339,6 +1346,13 @@ export function AiProvidersPage() {
                       <span className={styles.fieldValue}>{item.baseUrl}</span>
                     </div>
                   )}
+                  {/* Priority 行 */}
+                  {item.priority !== undefined && item.priority !== 0 && (
+                    <div className={styles.fieldRow}>
+                      <span className={styles.fieldLabel}>{t('ai_providers.priority_label')}:</span>
+                      <span className={styles.fieldValue}>{item.priority}</span>
+                    </div>
+                  )}
                   {/* 自定义请求头徽章 */}
                   {headerEntries.length > 0 && (
                     <div className={styles.headerBadgeList}>
@@ -1459,6 +1473,13 @@ export function AiProvidersPage() {
                       <span className={styles.fieldValue}>{item.proxyUrl}</span>
                     </div>
                   )}
+                  {/* Priority 行 */}
+                  {item.priority !== undefined && item.priority !== 0 && (
+                    <div className={styles.fieldRow}>
+                      <span className={styles.fieldLabel}>{t('ai_providers.priority_label')}:</span>
+                      <span className={styles.fieldValue}>{item.priority}</span>
+                    </div>
+                  )}
                   {/* 自定义请求头徽章 */}
                   {headerEntries.length > 0 && (
                     <div className={styles.headerBadgeList}>
@@ -1577,6 +1598,13 @@ export function AiProvidersPage() {
                     <div className={styles.fieldRow}>
                       <span className={styles.fieldLabel}>{t('common.proxy_url')}:</span>
                       <span className={styles.fieldValue}>{item.proxyUrl}</span>
+                    </div>
+                  )}
+                  {/* Priority 行 */}
+                  {item.priority !== undefined && item.priority !== 0 && (
+                    <div className={styles.fieldRow}>
+                      <span className={styles.fieldLabel}>{t('ai_providers.priority_label')}:</span>
+                      <span className={styles.fieldValue}>{item.priority}</span>
                     </div>
                   )}
                   {/* 自定义请求头徽章 */}
@@ -2008,6 +2036,20 @@ export function AiProvidersPage() {
             value={geminiForm.baseUrl ?? ''}
             onChange={(e) => setGeminiForm((prev) => ({ ...prev, baseUrl: e.target.value }))}
           />
+          <Input
+            label={t('ai_providers.priority_label')}
+            type="number"
+            placeholder={t('ai_providers.priority_placeholder')}
+            value={geminiForm.priority ?? ''}
+            onChange={(e) => {
+              const val = e.target.value.trim();
+              setGeminiForm((prev) => ({
+                ...prev,
+                priority: val === '' ? undefined : Number(val),
+              }));
+            }}
+            hint={t('ai_providers.priority_hint')}
+          />
           <HeaderInputList
             entries={headersToEntries(geminiForm.headers as any)}
             onChange={(entries) =>
@@ -2090,6 +2132,20 @@ export function AiProvidersPage() {
             }
             value={providerForm.proxyUrl ?? ''}
             onChange={(e) => setProviderForm((prev) => ({ ...prev, proxyUrl: e.target.value }))}
+          />
+          <Input
+            label={t('ai_providers.priority_label')}
+            type="number"
+            placeholder={t('ai_providers.priority_placeholder')}
+            value={providerForm.priority ?? ''}
+            onChange={(e) => {
+              const val = e.target.value.trim();
+              setProviderForm((prev) => ({
+                ...prev,
+                priority: val === '' ? undefined : Number(val),
+              }));
+            }}
+            hint={t('ai_providers.priority_hint')}
           />
           <HeaderInputList
             entries={headersToEntries(providerForm.headers as any)}
