@@ -428,6 +428,11 @@
     "upgrade_required_title": "Please upgrade CLI Proxy API",
     "upgrade_required_desc": "The current server does not support the OAuth excluded models API. Please upgrade to the latest CLI Proxy API (CPA) version."
   },
+  "auth_priority": {
+    "label": "Priority",
+    "click_to_edit": "Click to edit priority",
+    "save_success": "Priority updated successfully"
+  },
   "auth_login": {
     "codex_oauth_title": "Codex OAuth",
     "codex_oauth_button": "Start Codex Login",

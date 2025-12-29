@@ -428,6 +428,12 @@ export function AuthFilesPage() {
   const [excludedForm, setExcludedForm] = useState<ExcludedFormState>({ provider: '', modelsText: '' });
   const [savingExcluded, setSavingExcluded] = useState(false);
 
+  // Auth priority 相关
+  const [authPriority, setAuthPriority] = useState<Record<string, number>>({});
+  const [editingPriorityFile, setEditingPriorityFile] = useState<string | null>(null);
+  const [editingPriorityValue, setEditingPriorityValue] = useState<string>('');
+  const [savingPriority, setSavingPriority] = useState(false);
+
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const loadingKeyStatsRef = useRef(false);
   const antigravityLoadingRef = useRef(false);
@@ -506,6 +512,39 @@ export function AuthFilesPage() {
         return;
       }
       // 静默失败
+    }
+  }, [showNotification, t]);
+
+  // 加载 Auth Priority
+  const loadAuthPriority = useCallback(async () => {
+    try {
+      const res = await authFilesApi.getAuthPriority();
+      setAuthPriority(res || {});
+    } catch {
+      // 静默失败 - 可能后端不支持
+    }
+  }, []);
+
+  // 保存单个文件的优先级
+  const saveAuthPriority = useCallback(async (fileName: string, priority: number) => {
+    setSavingPriority(true);
+    try {
+      await authFilesApi.saveAuthPriority(fileName, priority);
+      setAuthPriority((prev) => {
+        if (priority === 0) {
+          const next = { ...prev };
+          delete next[fileName];
+          return next;
+        }
+        return { ...prev, [fileName]: priority };
+      });
+      showNotification(t('auth_priority.save_success'), 'success');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : t('notification.update_failed');
+      showNotification(errorMessage, 'error');
+    } finally {
+      setSavingPriority(false);
+      setEditingPriorityFile(null);
     }
   }, [showNotification, t]);
 
@@ -650,7 +689,8 @@ export function AuthFilesPage() {
     loadFiles();
     loadKeyStats();
     loadExcluded();
-  }, [loadFiles, loadKeyStats, loadExcluded]);
+    loadAuthPriority();
+  }, [loadFiles, loadKeyStats, loadExcluded, loadAuthPriority]);
 
   useEffect(() => {
     if (antigravityFiles.length === 0) {
@@ -1133,6 +1173,63 @@ export function AuthFilesPage() {
         <div className={styles.cardMeta}>
           <span>{t('auth_files.file_size')}: {item.size ? formatFileSize(item.size) : '-'}</span>
           <span>{t('auth_files.file_modified')}: {formatModified(item)}</span>
+        </div>
+
+        {/* 优先级编辑 */}
+        <div className={styles.priorityRow}>
+          <span className={styles.priorityLabel}>{t('auth_priority.label')}:</span>
+          {editingPriorityFile === item.name ? (
+            <div className={styles.priorityEdit}>
+              <input
+                type="number"
+                className={styles.priorityInput}
+                value={editingPriorityValue}
+                onChange={(e) => setEditingPriorityValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    const val = parseInt(editingPriorityValue, 10);
+                    saveAuthPriority(item.name, isNaN(val) ? 0 : val);
+                  } else if (e.key === 'Escape') {
+                    setEditingPriorityFile(null);
+                  }
+                }}
+                autoFocus
+                disabled={savingPriority}
+              />
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => {
+                  const val = parseInt(editingPriorityValue, 10);
+                  saveAuthPriority(item.name, isNaN(val) ? 0 : val);
+                }}
+                disabled={savingPriority}
+              >
+                {savingPriority ? <LoadingSpinner size={12} /> : t('common.save')}
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setEditingPriorityFile(null)}
+                disabled={savingPriority}
+              >
+                {t('common.cancel')}
+              </Button>
+            </div>
+          ) : (
+            <span
+              className={styles.priorityValue}
+              onClick={() => {
+                if (!disableControls) {
+                  setEditingPriorityFile(item.name);
+                  setEditingPriorityValue(String(authPriority[item.name] ?? 0));
+                }
+              }}
+              title={t('auth_priority.click_to_edit')}
+            >
+              {authPriority[item.name] ?? 0}
+            </span>
+          )}
         </div>
 
         <div className={styles.cardStats}>

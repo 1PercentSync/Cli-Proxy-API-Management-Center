@@ -197,6 +197,22 @@ const normalizeOauthExcluded = (payload: any): Record<string, string[]> | undefi
   return map;
 };
 
+const normalizeAuthPriority = (payload: any): Record<string, number> | undefined => {
+  if (!payload || typeof payload !== 'object') return undefined;
+  const source = payload['auth-priority'] ?? payload.items ?? payload;
+  if (!source || typeof source !== 'object') return undefined;
+  const map: Record<string, number> = {};
+  Object.entries(source).forEach(([fileName, priority]) => {
+    const key = String(fileName || '').trim();
+    if (!key) return;
+    const numPriority = Number(priority);
+    if (!isNaN(numPriority)) {
+      map[key] = numPriority;
+    }
+  });
+  return Object.keys(map).length > 0 ? map : undefined;
+};
+
 const normalizeAmpcodeModelMappings = (input: any): AmpcodeModelMapping[] => {
   if (!Array.isArray(input)) return [];
   const seen = new Set<string>();
@@ -306,6 +322,11 @@ export const normalizeConfigResponse = (raw: any): Config => {
   const oauthExcluded = normalizeOauthExcluded(raw['oauth-excluded-models'] ?? raw.oauthExcludedModels);
   if (oauthExcluded) {
     config.oauthExcludedModels = oauthExcluded;
+  }
+
+  const authPriority = normalizeAuthPriority(raw['auth-priority'] ?? raw.authPriority);
+  if (authPriority) {
+    config.authPriority = authPriority;
   }
 
   return config;

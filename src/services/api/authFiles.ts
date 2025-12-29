@@ -35,5 +35,18 @@ export const authFilesApi = {
   async getModelsForAuthFile(name: string): Promise<{ id: string; display_name?: string; type?: string; owned_by?: string }[]> {
     const data = await apiClient.get(`/auth-files/models?name=${encodeURIComponent(name)}`);
     return (data && Array.isArray(data['models'])) ? data['models'] : [];
-  }
+  },
+
+  // Auth priority
+  async getAuthPriority(): Promise<Record<string, number>> {
+    const data = await apiClient.get('/auth-priority');
+    const payload = (data && (data['auth-priority'] ?? data.items ?? data)) as any;
+    return payload && typeof payload === 'object' ? payload : {};
+  },
+
+  saveAuthPriority: (fileName: string, priority: number) =>
+    apiClient.patch('/auth-priority', { 'file-name': fileName, priority }),
+
+  deleteAuthPriority: (fileName: string) =>
+    apiClient.delete(`/auth-priority?file-name=${encodeURIComponent(fileName)}`)
 };

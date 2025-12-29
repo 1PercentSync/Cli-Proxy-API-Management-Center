@@ -428,6 +428,11 @@
     "upgrade_required_title": "需要升级 CPA 版本",
     "upgrade_required_desc": "当前服务器版本不支持获取模型排除列表功能，请升级到最新版本的 CPA（CLI Proxy API）后重试。"
   },
+  "auth_priority": {
+    "label": "优先级",
+    "click_to_edit": "点击编辑优先级",
+    "save_success": "优先级更新成功"
+  },
   "auth_login": {
     "codex_oauth_title": "Codex OAuth",
     "codex_oauth_button": "开始 Codex 登录",

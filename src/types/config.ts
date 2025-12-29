@@ -27,6 +27,7 @@ export interface Config {
   claudeApiKeys?: ProviderKeyConfig[];
   openaiCompatibility?: OpenAIProviderConfig[];
   oauthExcludedModels?: Record<string, string[]>;
+  authPriority?: Record<string, number>;
   raw?: Record<string, any>;
 }
 
@@ -45,7 +46,8 @@ export type RawConfigSection =
   | 'codex-api-key'
   | 'claude-api-key'
   | 'openai-compatibility'
-  | 'oauth-excluded-models';
+  | 'oauth-excluded-models'
+  | 'auth-priority';
 
 export interface ConfigCache {
   data: Config;
