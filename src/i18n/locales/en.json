@@ -34,6 +34,8 @@
     "alias": "Alias",
     "failure": "Failure",
     "unknown_error": "Unknown error",
+    "quota_update_required": "Please update the CPA version or check for updates",
+    "quota_check_credential": "Please check the credential status",
     "copy": "Copy",
     "custom_headers_label": "Custom Headers",
     "custom_headers_hint": "Optional HTTP headers to send with the request. Leave blank to remove.",
@@ -88,6 +90,7 @@
     "ai_providers": "AI Providers",
     "auth_files": "Auth Files",
     "oauth": "OAuth Login",
+    "quota_management": "Quota Management",
     "usage_stats": "Usage Statistics",
     "config_management": "Config Management",
     "logs": "Logs Viewer",
@@ -371,6 +374,41 @@
     "empty_models": "No quota data available",
     "refresh_button": "Refresh Quota",
     "fetch_all": "Fetch All"
+  },
+  "codex_quota": {
+    "title": "Codex Quota",
+    "empty_title": "No Codex Auth Files",
+    "empty_desc": "Upload a Codex credential to view quota.",
+    "idle": "Not loaded. Click Refresh Button.",
+    "loading": "Loading quota...",
+    "load_failed": "Failed to load quota: {{message}}",
+    "missing_auth_index": "Auth file missing auth_index",
+    "missing_account_id": "Codex credential missing ChatGPT account ID",
+    "empty_windows": "No quota data available",
+    "no_access": "This credential has no Codex access (plan: free).",
+    "refresh_button": "Refresh Quota",
+    "fetch_all": "Fetch All",
+    "primary_window": "5-hour limit",
+    "secondary_window": "Weekly limit",
+    "code_review_window": "Code review limit",
+    "plan_label": "Plan",
+    "plan_plus": "Plus",
+    "plan_team": "Team",
+    "plan_free": "Free"
+  },
+  "gemini_cli_quota": {
+    "title": "Gemini CLI Quota",
+    "empty_title": "No Gemini CLI Auth Files",
+    "empty_desc": "Upload a Gemini CLI credential to view remaining quota.",
+    "idle": "Not loaded. Click Refresh Button.",
+    "loading": "Loading quota...",
+    "load_failed": "Failed to load quota: {{message}}",
+    "missing_auth_index": "Auth file missing auth_index",
+    "missing_project_id": "Gemini CLI credential missing project ID",
+    "empty_buckets": "No quota data available",
+    "refresh_button": "Refresh Quota",
+    "fetch_all": "Fetch All",
+    "remaining_amount": "Remaining {{count}}"
   },
   "vertex_import": {
     "title": "Vertex JSON Login",
@@ -674,6 +712,11 @@
     "search_no_results": "No results",
     "search_prev": "Previous",
     "search_next": "Next"
+  },
+  "quota_management": {
+    "title": "Quota Management",
+    "description": "Monitor OAuth quota status for Antigravity, Codex, and Gemini CLI credentials.",
+    "refresh_files": "Refresh auth files"
   },
   "system_info": {
     "title": "Management Center Info",
