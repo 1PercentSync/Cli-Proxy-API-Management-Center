@@ -635,7 +635,6 @@ export function AuthFilesPage() {
         await authFilesApi.deleteOauthExcludedEntry(provider);
       }
       await loadExcluded();
-    loadAuthPriority();
       showNotification(t('oauth_excluded.save_success'), 'success');
       setExcludedModalOpen(false);
     } catch (err: unknown) {
@@ -651,7 +650,6 @@ export function AuthFilesPage() {
     try {
       await authFilesApi.deleteOauthExcludedEntry(provider);
       await loadExcluded();
-    loadAuthPriority();
       showNotification(t('oauth_excluded.delete_success'), 'success');
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : '';
