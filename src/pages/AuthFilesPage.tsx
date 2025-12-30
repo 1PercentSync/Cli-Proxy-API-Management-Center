@@ -179,6 +179,12 @@ export function AuthFilesPage() {
   const [excludedForm, setExcludedForm] = useState<ExcludedFormState>({ provider: '', modelsText: '' });
   const [savingExcluded, setSavingExcluded] = useState(false);
 
+  // Auth priority 相关
+  const [authPriority, setAuthPriority] = useState<Record<string, number>>({});
+  const [editingPriorityFile, setEditingPriorityFile] = useState<string | null>(null);
+  const [editingPriorityValue, setEditingPriorityValue] = useState<string>('');
+  const [savingPriority, setSavingPriority] = useState(false);
+
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const loadingKeyStatsRef = useRef(false);
   const excludedUnsupportedRef = useRef(false);
@@ -258,11 +264,46 @@ export function AuthFilesPage() {
     }
   }, [showNotification, t]);
 
+  // 加载 Auth priority 配置
+  const loadAuthPriority = useCallback(async () => {
+    try {
+      const res = await authFilesApi.getAuthPriority();
+      setAuthPriority(res || {});
+    } catch {
+      // 静默失败 - API 可能不存在于旧版本
+    }
+  }, []);
+
+  // 保存 Auth priority
+  const saveAuthPriority = useCallback(async (fileName: string, priority: number) => {
+    setSavingPriority(true);
+    try {
+      await authFilesApi.saveAuthPriority(fileName, priority);
+      setAuthPriority((prev) => {
+        if (priority === 0) {
+          const next = { ...prev };
+          delete next[fileName];
+          return next;
+        }
+        return { ...prev, [fileName]: priority };
+      });
+      showNotification(t('auth_priority.save_success'), 'success');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : t('notification.update_failed');
+      showNotification(errorMessage, 'error');
+    } finally {
+      setSavingPriority(false);
+      setEditingPriorityFile(null);
+    }
+  }, [showNotification, t]);
+
+
   useEffect(() => {
     loadFiles();
     loadKeyStats();
     loadExcluded();
-  }, [loadFiles, loadKeyStats, loadExcluded]);
+    loadAuthPriority();
+  }, [loadFiles, loadKeyStats, loadExcluded, loadAuthPriority]);
 
   // 定时刷新状态数据（每240秒）
   useInterval(loadKeyStats, 240_000);
@@ -594,6 +635,7 @@ export function AuthFilesPage() {
         await authFilesApi.deleteOauthExcludedEntry(provider);
       }
       await loadExcluded();
+    loadAuthPriority();
       showNotification(t('oauth_excluded.save_success'), 'success');
       setExcludedModalOpen(false);
     } catch (err: unknown) {
@@ -609,6 +651,7 @@ export function AuthFilesPage() {
     try {
       await authFilesApi.deleteOauthExcludedEntry(provider);
       await loadExcluded();
+    loadAuthPriority();
       showNotification(t('oauth_excluded.delete_success'), 'success');
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : '';
@@ -738,6 +781,64 @@ export function AuthFilesPage() {
             {t('stats.failure')}: {fileStats.failure}
           </span>
         </div>
+
+
+        {/* Priority 编辑区域 */}
+        {!isRuntimeOnly && (
+          <div className={styles.priorityRow}>
+            <span className={styles.priorityLabel}>{t('auth_priority.label')}:</span>
+            {editingPriorityFile === item.name ? (
+              <div className={styles.priorityEdit}>
+                <input
+                  type="number"
+                  className={styles.priorityInput}
+                  value={editingPriorityValue}
+                  onChange={(e) => setEditingPriorityValue(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      const val = parseInt(editingPriorityValue, 10);
+                      saveAuthPriority(item.name, Number.isNaN(val) ? 0 : val);
+                    } else if (e.key === 'Escape') {
+                      setEditingPriorityFile(null);
+                    }
+                  }}
+                  disabled={savingPriority}
+                  autoFocus
+                />
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    const val = parseInt(editingPriorityValue, 10);
+                    saveAuthPriority(item.name, Number.isNaN(val) ? 0 : val);
+                  }}
+                  disabled={savingPriority}
+                  loading={savingPriority}
+                >
+                  {t('common.save')}
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setEditingPriorityFile(null)}
+                  disabled={savingPriority}
+                >
+                  {t('common.cancel')}
+                </Button>
+              </div>
+            ) : (
+              <button
+                className={styles.priorityValue}
+                onClick={() => {
+                  setEditingPriorityFile(item.name);
+                  setEditingPriorityValue(String(authPriority[item.name] || 0));
+                }}
+                disabled={disableControls}
+              >
+                {authPriority[item.name] || 0}
+              </button>
+            )}
+          </div>
+        )}
 
         {/* 状态监测栏 */}
         {renderStatusBar(item)}
