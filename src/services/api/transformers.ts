@@ -83,11 +83,13 @@ const normalizeApiKeyEntry = (entry: any): ApiKeyEntry | null => {
   if (!trimmed) return null;
 
   const proxyUrl = entry['proxy-url'] ?? entry.proxyUrl;
+  const priority = entry.priority ?? entry['priority'];
   const headers = normalizeHeaders(entry.headers);
 
   return {
     apiKey: trimmed,
     proxyUrl: proxyUrl ? String(proxyUrl) : undefined,
+    priority: priority !== undefined ? Number(priority) : undefined,
     headers
   };
 };
@@ -103,8 +105,10 @@ const normalizeProviderKeyConfig = (item: any): ProviderKeyConfig | null => {
   if (prefix) config.prefix = prefix;
   const baseUrl = item['base-url'] ?? item.baseUrl;
   const proxyUrl = item['proxy-url'] ?? item.proxyUrl;
+  const priority = item.priority ?? item['priority'];
   if (baseUrl) config.baseUrl = String(baseUrl);
   if (proxyUrl) config.proxyUrl = String(proxyUrl);
+  if (priority !== undefined) config.priority = Number(priority);
   const headers = normalizeHeaders(item.headers);
   if (headers) config.headers = headers;
   const models = normalizeModelAliases(item.models);
@@ -130,6 +134,8 @@ const normalizeGeminiKeyConfig = (item: any): GeminiKeyConfig | null => {
   if (prefix) config.prefix = prefix;
   const baseUrl = item['base-url'] ?? item.baseUrl ?? item['base_url'];
   if (baseUrl) config.baseUrl = String(baseUrl);
+  const priority = item.priority ?? item['priority'];
+  if (priority !== undefined) config.priority = Number(priority);
   const headers = normalizeHeaders(item.headers);
   if (headers) config.headers = headers;
   const excludedModels = normalizeExcludedModels(item['excluded-models'] ?? item.excludedModels);
@@ -312,6 +318,20 @@ export const normalizeConfigResponse = (raw: any): Config => {
   const oauthExcluded = normalizeOauthExcluded(raw['oauth-excluded-models'] ?? raw.oauthExcludedModels);
   if (oauthExcluded) {
     config.oauthExcludedModels = oauthExcluded;
+  }
+
+  const authPriority = raw['auth-priority'] ?? raw.authPriority;
+  if (authPriority && typeof authPriority === 'object') {
+    const normalized: Record<string, number> = {};
+    Object.entries(authPriority).forEach(([key, value]) => {
+      const trimmedKey = String(key || '').trim();
+      if (trimmedKey && typeof value === 'number') {
+        normalized[trimmedKey] = value;
+      }
+    });
+    if (Object.keys(normalized).length) {
+      config.authPriority = normalized;
+    }
   }
 
   return config;

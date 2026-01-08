@@ -19,6 +19,7 @@ const buildEmptyForm = (): ProviderFormState => ({
   prefix: '',
   baseUrl: '',
   proxyUrl: '',
+  priority: undefined,
   headers: {},
   models: [],
   excludedModels: [],
@@ -93,6 +94,20 @@ export function ClaudeModal({
         label={t('ai_providers.claude_add_modal_proxy_label')}
         value={form.proxyUrl ?? ''}
         onChange={(e) => setForm((prev) => ({ ...prev, proxyUrl: e.target.value }))}
+      />
+      <Input
+        label={t('ai_providers.priority_label')}
+        type="number"
+        placeholder={t('ai_providers.priority_placeholder')}
+        value={form.priority ?? ''}
+        onChange={(e) => {
+          const val = e.target.value.trim();
+          setForm((prev) => ({
+            ...prev,
+            priority: val === '' ? undefined : Number(val),
+          }));
+        }}
+        hint={t('ai_providers.priority_hint')}
       />
       <HeaderInputList
         entries={headersToEntries(form.headers)}

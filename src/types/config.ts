@@ -31,6 +31,7 @@ export interface Config {
   vertexApiKeys?: ProviderKeyConfig[];
   openaiCompatibility?: OpenAIProviderConfig[];
   oauthExcludedModels?: Record<string, string[]>;
+  authPriority?: Record<string, number>;
   raw?: Record<string, any>;
 }
 
@@ -53,7 +54,8 @@ export type RawConfigSection =
   | 'claude-api-key'
   | 'vertex-api-key'
   | 'openai-compatibility'
-  | 'oauth-excluded-models';
+  | 'oauth-excluded-models'
+  | 'auth-priority';
 
 export interface ConfigCache {
   data: Config;

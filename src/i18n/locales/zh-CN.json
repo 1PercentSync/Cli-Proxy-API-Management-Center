@@ -192,6 +192,9 @@
     "prefix_label": "前缀 (可选):",
     "prefix_placeholder": "例如: team-a",
     "prefix_hint": "设置后可用 prefix/<model> 选择该条目。",
+    "priority_label": "优先级",
+    "priority_placeholder": "例如: 100",
+    "priority_hint": "数值越大优先级越高，默认为 0。",
     "config_toggle_label": "启用",
     "config_disabled_badge": "已停用",
     "codex_title": "Codex API 配置",
@@ -396,6 +399,10 @@
     "models_unsupported_desc": "请更新 CLI Proxy API 到最新版本后重试",
     "models_excluded_badge": "已排除",
     "models_excluded_hint": "此模型已被 OAuth 排除"
+  },
+  "auth_priority": {
+    "label": "优先级",
+    "save_success": "优先级保存成功"
   },
   "antigravity_quota": {
     "title": "Antigravity 额度",

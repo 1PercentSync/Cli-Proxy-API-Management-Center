@@ -17,6 +17,7 @@ const buildEmptyForm = (): GeminiFormState => ({
   apiKey: '',
   prefix: '',
   baseUrl: '',
+  priority: undefined,
   headers: {},
   excludedModels: [],
   excludedText: '',
@@ -83,6 +84,20 @@ export function GeminiModal({
         value={form.prefix ?? ''}
         onChange={(e) => setForm((prev) => ({ ...prev, prefix: e.target.value }))}
         hint={t('ai_providers.prefix_hint')}
+      />
+      <Input
+        label={t('ai_providers.priority_label')}
+        type="number"
+        placeholder={t('ai_providers.priority_placeholder')}
+        value={form.priority ?? ''}
+        onChange={(e) => {
+          const val = e.target.value.trim();
+          setForm((prev) => ({
+            ...prev,
+            priority: val === '' ? undefined : Number(val),
+          }));
+        }}
+        hint={t('ai_providers.priority_hint')}
       />
       <Input
         label={t('ai_providers.gemini_base_url_label')}

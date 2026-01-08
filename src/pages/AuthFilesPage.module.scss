@@ -916,3 +916,61 @@
   border: 1px solid var(--danger-color);
   flex-shrink: 0;
 }
+
+// Priority 编辑区域
+.priorityRow {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-xs 0;
+  font-size: 13px;
+}
+
+.priorityLabel {
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.priorityValue {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: $radius-sm;
+  padding: 2px 8px;
+  min-width: 40px;
+  text-align: center;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover:not(:disabled) {
+    border-color: var(--primary-color);
+    background: var(--bg-secondary);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+}
+
+.priorityEdit {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+}
+
+.priorityInput {
+  width: 60px;
+  padding: 4px 8px;
+  border: 1px solid var(--border-color);
+  border-radius: $radius-sm;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 13px;
+  text-align: center;
+
+  &:focus {
+    outline: none;
+    border-color: var(--primary-color);
+  }
+}
