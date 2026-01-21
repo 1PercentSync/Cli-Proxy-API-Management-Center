@@ -233,13 +233,32 @@ export const authFilesApi = {
     const data = await apiClient.get('/auth-priority');
     if (!data || typeof data !== 'object') return {};
     const source = data['auth-priority'] ?? data.items ?? data;
-    if (!source || typeof source !== 'object') return {};
+    if (!source) return {};
+
     const result: Record<string, number> = {};
-    Object.entries(source as Record<string, unknown>).forEach(([name, priority]) => {
-      if (typeof priority === 'number' && Number.isFinite(priority)) {
-        result[name] = priority;
-      }
-    });
+
+    // Handle array format: [{name, priority}, ...]
+    if (Array.isArray(source)) {
+      source.forEach((item) => {
+        if (!item || typeof item !== 'object') return;
+        const name = String((item as Record<string, unknown>).name ?? '').trim();
+        const priority = (item as Record<string, unknown>).priority;
+        if (name && typeof priority === 'number' && Number.isFinite(priority)) {
+          result[name] = priority;
+        }
+      });
+      return result;
+    }
+
+    // Handle object format: {name: priority, ...}
+    if (typeof source === 'object') {
+      Object.entries(source as Record<string, unknown>).forEach(([name, priority]) => {
+        if (typeof priority === 'number' && Number.isFinite(priority)) {
+          result[name] = priority;
+        }
+      });
+    }
+
     return result;
   },
 
