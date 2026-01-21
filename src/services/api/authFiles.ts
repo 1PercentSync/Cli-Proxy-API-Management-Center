@@ -51,7 +51,9 @@ const normalizeOauthExcludedModels = (payload: unknown): Record<string, string[]
   return result;
 };
 
-const normalizeOauthModelMappings = (payload: unknown): Record<string, OAuthModelMappingEntry[]> => {
+const normalizeOauthModelMappings = (
+  payload: unknown
+): Record<string, OAuthModelMappingEntry[]> => {
   if (!payload || typeof payload !== 'object') return {};
 
   const source =
@@ -74,7 +76,9 @@ const normalizeOauthModelMappings = (payload: unknown): Record<string, OAuthMode
     const normalized = mappings
       .map((item) => {
         if (!item || typeof item !== 'object') return null;
-        const name = String((item as any).name ?? (item as any).id ?? (item as any).model ?? '').trim();
+        const name = String(
+          (item as any).name ?? (item as any).id ?? (item as any).model ?? ''
+        ).trim();
         const alias = String((item as any).alias ?? '').trim();
         if (!name || !alias) return null;
         const fork = (item as any).fork === true;
@@ -114,9 +118,12 @@ export const authFilesApi = {
   deleteAll: () => apiClient.delete('/auth-files', { params: { all: true } }),
 
   downloadText: async (name: string): Promise<string> => {
-    const response = await apiClient.getRaw(`/auth-files/download?name=${encodeURIComponent(name)}`, {
-      responseType: 'blob'
-    });
+    const response = await apiClient.getRaw(
+      `/auth-files/download?name=${encodeURIComponent(name)}`,
+      {
+        responseType: 'blob',
+      }
+    );
     const blob = response.data as Blob;
     return blob.text();
   },
@@ -152,14 +159,21 @@ export const authFilesApi = {
     const normalizedChannel = String(channel ?? '')
       .trim()
       .toLowerCase();
-    const normalizedMappings = normalizeOauthModelMappings({ [normalizedChannel]: mappings })[normalizedChannel] ?? [];
+    const normalizedMappings =
+      normalizeOauthModelMappings({ [normalizedChannel]: mappings })[normalizedChannel] ?? [];
 
     try {
-      await apiClient.patch(OAUTH_MODEL_MAPPINGS_ENDPOINT, { channel: normalizedChannel, mappings: normalizedMappings });
+      await apiClient.patch(OAUTH_MODEL_MAPPINGS_ENDPOINT, {
+        channel: normalizedChannel,
+        mappings: normalizedMappings,
+      });
       return;
     } catch (err: unknown) {
       if (getStatusCode(err) !== 404) throw err;
-      await apiClient.patch(OAUTH_MODEL_MAPPINGS_LEGACY_ENDPOINT, { channel: normalizedChannel, aliases: normalizedMappings });
+      await apiClient.patch(OAUTH_MODEL_MAPPINGS_LEGACY_ENDPOINT, {
+        channel: normalizedChannel,
+        aliases: normalizedMappings,
+      });
     }
   },
 
@@ -170,11 +184,17 @@ export const authFilesApi = {
 
     const deleteViaPatch = async () => {
       try {
-        await apiClient.patch(OAUTH_MODEL_MAPPINGS_ENDPOINT, { channel: normalizedChannel, mappings: [] });
+        await apiClient.patch(OAUTH_MODEL_MAPPINGS_ENDPOINT, {
+          channel: normalizedChannel,
+          mappings: [],
+        });
         return true;
       } catch (err: unknown) {
         if (getStatusCode(err) !== 404) throw err;
-        await apiClient.patch(OAUTH_MODEL_MAPPINGS_LEGACY_ENDPOINT, { channel: normalizedChannel, aliases: [] });
+        await apiClient.patch(OAUTH_MODEL_MAPPINGS_LEGACY_ENDPOINT, {
+          channel: normalizedChannel,
+          aliases: [],
+        });
         return true;
       }
     };
@@ -188,17 +208,42 @@ export const authFilesApi = {
     }
 
     try {
-      await apiClient.delete(`${OAUTH_MODEL_MAPPINGS_ENDPOINT}?channel=${encodeURIComponent(normalizedChannel)}`);
+      await apiClient.delete(
+        `${OAUTH_MODEL_MAPPINGS_ENDPOINT}?channel=${encodeURIComponent(normalizedChannel)}`
+      );
       return;
     } catch (err: unknown) {
       if (getStatusCode(err) !== 404) throw err;
-      await apiClient.delete(`${OAUTH_MODEL_MAPPINGS_LEGACY_ENDPOINT}?channel=${encodeURIComponent(normalizedChannel)}`);
+      await apiClient.delete(
+        `${OAUTH_MODEL_MAPPINGS_LEGACY_ENDPOINT}?channel=${encodeURIComponent(normalizedChannel)}`
+      );
     }
   },
 
   // 获取认证凭证支持的模型
-  async getModelsForAuthFile(name: string): Promise<{ id: string; display_name?: string; type?: string; owned_by?: string }[]> {
+  async getModelsForAuthFile(
+    name: string
+  ): Promise<{ id: string; display_name?: string; type?: string; owned_by?: string }[]> {
     const data = await apiClient.get(`/auth-files/models?name=${encodeURIComponent(name)}`);
-    return (data && Array.isArray(data['models'])) ? data['models'] : [];
-  }
+    return data && Array.isArray(data['models']) ? data['models'] : [];
+  },
+
+  // 获取认证优先级列表
+  async getAuthPriority(): Promise<Record<string, number>> {
+    const data = await apiClient.get('/auth-priority');
+    if (!data || typeof data !== 'object') return {};
+    const source = data['auth-priority'] ?? data.items ?? data;
+    if (!source || typeof source !== 'object') return {};
+    const result: Record<string, number> = {};
+    Object.entries(source as Record<string, unknown>).forEach(([name, priority]) => {
+      if (typeof priority === 'number' && Number.isFinite(priority)) {
+        result[name] = priority;
+      }
+    });
+    return result;
+  },
+
+  // 更新单个认证文件优先级
+  updateAuthPriority: (name: string, priority: number) =>
+    apiClient.patch('/auth-priority', { name, priority }),
 };

@@ -29,6 +29,7 @@ const buildEmptyForm = (): OpenAIFormState => ({
   apiKeyEntries: [buildApiKeyEntry()],
   modelEntries: [{ name: '', alias: '' }],
   testModel: undefined,
+  priority: undefined,
 });
 
 export function OpenAIModal({
@@ -76,6 +77,7 @@ export function OpenAIModal({
         apiKeyEntries: initialData.apiKeyEntries?.length
           ? initialData.apiKeyEntries
           : [buildApiKeyEntry()],
+        priority: initialData.priority,
       });
       const available = modelEntries.map((entry) => entry.name.trim()).filter(Boolean);
       const initialModel =
@@ -203,7 +205,10 @@ export function OpenAIModal({
 
     setDiscoveryOpen(false);
     if (addedCount > 0) {
-      showNotification(t('ai_providers.openai_models_fetch_added', { count: addedCount }), 'success');
+      showNotification(
+        t('ai_providers.openai_models_fetch_added', { count: addedCount }),
+        'success'
+      );
     }
   };
 
@@ -282,11 +287,14 @@ export function OpenAIModal({
       setTestStatus('error');
       const message = getErrorMessage(err);
       const errorCode =
-        typeof err === 'object' && err !== null && 'code' in err ? String((err as { code?: string }).code) : '';
-      const isTimeout =
-        errorCode === 'ECONNABORTED' || message.toLowerCase().includes('timeout');
+        typeof err === 'object' && err !== null && 'code' in err
+          ? String((err as { code?: string }).code)
+          : '';
+      const isTimeout = errorCode === 'ECONNABORTED' || message.toLowerCase().includes('timeout');
       if (isTimeout) {
-        setTestMessage(t('ai_providers.openai_test_timeout', { seconds: OPENAI_TEST_TIMEOUT_MS / 1000 }));
+        setTestMessage(
+          t('ai_providers.openai_test_timeout', { seconds: OPENAI_TEST_TIMEOUT_MS / 1000 })
+        );
       } else {
         setTestMessage(`${t('ai_providers.openai_test_failed')}: ${message}`);
       }
@@ -355,7 +363,12 @@ export function OpenAIModal({
             aliasPlaceholder={t('common.model_alias_placeholder')}
             disabled={isSaving}
           />
-          <Button variant="secondary" size="sm" onClick={openOpenaiModelDiscovery} disabled={isSaving}>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={openOpenaiModelDiscovery}
+            disabled={isSaving}
+          >
             {t('ai_providers.openai_models_fetch_button')}
           </Button>
         </div>
@@ -417,6 +430,21 @@ export function OpenAIModal({
           <label>{t('ai_providers.openai_add_modal_keys_label')}</label>
           {renderKeyEntries(form.apiKeyEntries)}
         </div>
+
+        <Input
+          label={t('common.priority')}
+          type="number"
+          placeholder={t('ai_providers.priority_placeholder')}
+          value={form.priority?.toString() ?? ''}
+          onChange={(e) => {
+            const value = e.target.value.trim();
+            setForm((prev) => ({
+              ...prev,
+              priority: value === '' ? undefined : parseInt(value, 10),
+            }));
+          }}
+          hint={t('ai_providers.priority_hint')}
+        />
       </Modal>
 
       <OpenAIDiscoveryModal

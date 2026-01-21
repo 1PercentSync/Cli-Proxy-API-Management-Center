@@ -20,6 +20,7 @@ const buildEmptyForm = (): GeminiFormState => ({
   headers: [],
   excludedModels: [],
   excludedText: '',
+  priority: undefined,
 });
 
 export function GeminiModal({
@@ -41,6 +42,7 @@ export function GeminiModal({
         ...initialData,
         headers: headersToEntries(initialData.headers),
         excludedText: excludedModelsToText(initialData.excludedModels),
+        priority: initialData.priority,
       });
       return;
     }
@@ -108,6 +110,20 @@ export function GeminiModal({
         />
         <div className="hint">{t('ai_providers.excluded_models_hint')}</div>
       </div>
+      <Input
+        label={t('common.priority')}
+        type="number"
+        placeholder={t('ai_providers.priority_placeholder')}
+        value={form.priority?.toString() ?? ''}
+        onChange={(e) => {
+          const value = e.target.value.trim();
+          setForm((prev) => ({
+            ...prev,
+            priority: value === '' ? undefined : parseInt(value, 10),
+          }));
+        }}
+        hint={t('ai_providers.priority_hint')}
+      />
     </Modal>
   );
 }

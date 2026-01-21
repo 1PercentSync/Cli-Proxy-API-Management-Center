@@ -37,6 +37,7 @@
     "quota_update_required": "请更新 CPA 版本或检查更新",
     "quota_check_credential": "请检查凭证状态",
     "copy": "复制",
+    "priority": "优先级",
     "custom_headers_label": "自定义请求头",
     "custom_headers_hint": "可选，设置需要附带到请求中的 HTTP 头，名称和值均不能为空。",
     "custom_headers_add": "添加请求头",
@@ -324,7 +325,10 @@
     "openai_test_success": "测试成功，模型可用。",
     "openai_test_failed": "测试失败",
     "openai_test_select_placeholder": "从当前模型列表选择",
-    "openai_test_select_empty": "当前未配置模型，请先添加模型"
+    "openai_test_select_empty": "当前未配置模型，请先添加模型",
+    "priority_label": "优先级",
+    "priority_placeholder": "例如: 100",
+    "priority_hint": "数值越大优先级越高，相同优先级按名称排序。"
   },
   "auth_files": {
     "title": "认证文件管理",
@@ -395,7 +399,9 @@
     "models_unsupported": "当前版本不支持此功能",
     "models_unsupported_desc": "请更新 CLI Proxy API 到最新版本后重试",
     "models_excluded_badge": "已排除",
-    "models_excluded_hint": "此模型已被 OAuth 排除"
+    "models_excluded_hint": "此模型已被 OAuth 排除",
+    "priority_updated": "优先级已更新",
+    "priority_update_failed": "优先级更新失败"
   },
   "antigravity_quota": {
     "title": "Antigravity 额度",

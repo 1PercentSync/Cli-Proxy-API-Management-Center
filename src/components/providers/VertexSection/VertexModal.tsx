@@ -21,6 +21,7 @@ const buildEmptyForm = (): VertexFormState => ({
   headers: [],
   models: [],
   modelEntries: [{ name: '', alias: '' }],
+  priority: undefined,
 });
 
 export function VertexModal({
@@ -42,6 +43,7 @@ export function VertexModal({
         ...initialData,
         headers: headersToEntries(initialData.headers),
         modelEntries: modelsToEntries(initialData.models),
+        priority: initialData.priority,
       });
       return;
     }
@@ -112,6 +114,20 @@ export function VertexModal({
         />
         <div className="hint">{t('ai_providers.vertex_models_hint')}</div>
       </div>
+      <Input
+        label={t('common.priority')}
+        type="number"
+        placeholder={t('ai_providers.priority_placeholder')}
+        value={form.priority?.toString() ?? ''}
+        onChange={(e) => {
+          const value = e.target.value.trim();
+          setForm((prev) => ({
+            ...prev,
+            priority: value === '' ? undefined : parseInt(value, 10),
+          }));
+        }}
+        hint={t('ai_providers.priority_hint')}
+      />
     </Modal>
   );
 }
