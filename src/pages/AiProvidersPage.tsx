@@ -153,6 +153,7 @@ export function AiProvidersPage() {
         baseUrl: form.baseUrl?.trim() || undefined,
         headers: buildHeaderObject(form.headers),
         excludedModels: parseExcludedModels(form.excludedText),
+        priority: form.priority,
       };
       const nextList =
         editIndex !== null
@@ -310,6 +311,7 @@ export function AiProvidersPage() {
         headers: buildHeaderObject(form.headers),
         models: entriesToModels(form.modelEntries),
         excludedModels: parseExcludedModels(form.excludedText),
+        priority: form.priority,
       };
 
       const nextList =
@@ -399,6 +401,7 @@ export function AiProvidersPage() {
             return { name, alias };
           })
           .filter(Boolean) as ProviderKeyConfig['models'],
+        priority: form.priority,
       };
 
       const nextList =
@@ -455,6 +458,7 @@ export function AiProvidersPage() {
           headers: entry.headers,
         })),
       };
+      if (form.priority !== undefined) payload.priority = form.priority;
       if (form.testModel) payload.testModel = form.testModel.trim();
       const models = entriesToModels(form.modelEntries);
       if (models.length) payload.models = models;
