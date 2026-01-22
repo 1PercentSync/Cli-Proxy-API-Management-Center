@@ -931,9 +931,10 @@ export function AuthFilesPage() {
     setSavingPriority(name);
     try {
       await authFilesApi.updateAuthPriority(name, editingPriorityValue);
-      setAuthPriority((prev) => ({ ...prev, [name]: editingPriorityValue }));
-      showNotification(t('auth_files.priority_updated'), 'success');
+      // Reload priority data from server to ensure consistency
+      await loadAuthPriority();
       setEditingPriorityFile(null);
+      showNotification(t('auth_files.priority_updated'), 'success');
     } catch (err: unknown) {
       const status =
         typeof err === 'object' && err !== null && 'status' in err
