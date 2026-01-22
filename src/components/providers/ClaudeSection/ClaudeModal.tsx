@@ -132,9 +132,10 @@ export function ClaudeModal({
         value={form.priority?.toString() ?? ''}
         onChange={(e) => {
           const value = e.target.value.trim();
+          const parsed = parseInt(value, 10);
           setForm((prev) => ({
             ...prev,
-            priority: value === '' ? undefined : parseInt(value, 10),
+            priority: value === '' || Number.isNaN(parsed) ? undefined : parsed,
           }));
         }}
         hint={t('ai_providers.priority_hint')}

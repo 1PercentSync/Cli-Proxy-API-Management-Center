@@ -30,7 +30,7 @@ const normalizeModelAliases = (models: any): ModelAlias[] => {
       const name = item.name || item.id || item.model;
       if (!name) return null;
       const alias = item.alias || item.display_name || item.displayName;
-      const priority = item.priority ?? item['priority'];
+      const priority = item.priority;
       const testModel = item['test-model'] ?? item.testModel;
       const entry: ModelAlias = { name: String(name) };
       if (alias && alias !== name) {
@@ -121,7 +121,7 @@ const normalizeProviderKeyConfig = (item: any): ProviderKeyConfig | null => {
       item.excluded_models
   );
   if (excludedModels.length) config.excludedModels = excludedModels;
-  const priority = item.priority ?? item['priority'];
+  const priority = item.priority;
   if (priority !== undefined && typeof priority === 'number') config.priority = priority;
   return config;
 };
@@ -144,7 +144,7 @@ const normalizeGeminiKeyConfig = (item: any): GeminiKeyConfig | null => {
   if (headers) config.headers = headers;
   const excludedModels = normalizeExcludedModels(item['excluded-models'] ?? item.excludedModels);
   if (excludedModels.length) config.excludedModels = excludedModels;
-  const priority = item.priority ?? item['priority'];
+  const priority = item.priority;
   if (priority !== undefined && typeof priority === 'number') config.priority = priority;
   return config;
 };
@@ -168,7 +168,7 @@ const normalizeOpenAIProvider = (provider: any): OpenAIProviderConfig | null => 
 
   const headers = normalizeHeaders(provider.headers);
   const models = normalizeModelAliases(provider.models);
-  const priority = provider.priority ?? provider['priority'];
+  const priority = provider.priority;
   const testModel = provider['test-model'] ?? provider.testModel;
 
   const result: OpenAIProviderConfig = {

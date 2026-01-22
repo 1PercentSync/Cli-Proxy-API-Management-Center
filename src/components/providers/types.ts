@@ -36,20 +36,17 @@ export interface AmpcodeFormState {
 export type GeminiFormState = Omit<GeminiKeyConfig, 'headers'> & {
   headers: HeaderEntry[];
   excludedText: string;
-  priority?: number;
 };
 
 export type ProviderFormState = Omit<ProviderKeyConfig, 'headers'> & {
   headers: HeaderEntry[];
   modelEntries: ModelEntry[];
   excludedText: string;
-  priority?: number;
 };
 
 export type VertexFormState = Omit<ProviderKeyConfig, 'headers' | 'excludedModels'> & {
   headers: HeaderEntry[];
   modelEntries: ModelEntry[];
-  priority?: number;
 };
 
 export interface ProviderSectionProps<TConfig> {
