@@ -401,7 +401,9 @@
     "models_excluded_badge": "已排除",
     "models_excluded_hint": "此模型已被 OAuth 排除",
     "priority_updated": "优先级已更新",
-    "priority_update_failed": "优先级更新失败"
+    "priority_update_failed": "优先级更新失败",
+    "sort_by_priority": "按优先级排序",
+    "click_to_edit_priority": "点击修改优先级"
   },
   "antigravity_quota": {
     "title": "Antigravity 额度",

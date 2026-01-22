@@ -228,6 +228,9 @@ export function AuthFilesPage() {
   const [authPriority, setAuthPriority] = useState<Record<string, number>>({});
   const [authPriorityError, setAuthPriorityError] = useState<'unsupported' | null>(null);
   const [savingPriority, setSavingPriority] = useState<string | null>(null);
+  const [editingPriorityFile, setEditingPriorityFile] = useState<string | null>(null);
+  const [editingPriorityValue, setEditingPriorityValue] = useState<number>(0);
+  const [sortByPriority, setSortByPriority] = useState(false);
   const authPriorityUnsupportedRef = useRef(false);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -469,16 +472,20 @@ export function AuthFilesPage() {
       return matchType && matchSearch;
     });
 
-    // 按优先级排序（优先级高的在前，优先级相同按名称排序）
-    return result.sort((a, b) => {
+    if (!sortByPriority) {
+      return result; // Default: keep original order (backend order)
+    }
+
+    // Sort by priority (higher priority first, same priority by name)
+    return [...result].sort((a, b) => {
       const priorityA = authPriority[a.name] ?? 0;
       const priorityB = authPriority[b.name] ?? 0;
       if (priorityA !== priorityB) {
-        return priorityB - priorityA; // 高优先级在前
+        return priorityB - priorityA;
       }
       return a.name.localeCompare(b.name);
     });
-  }, [files, filter, search, authPriority]);
+  }, [files, filter, search, authPriority, sortByPriority]);
 
   // 分页计算
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
@@ -913,14 +920,20 @@ export function AuthFilesPage() {
     }
   };
 
-  // 更新认证文件优先级
-  const handlePriorityChange = async (name: string, priority: number) => {
+  // 保存认证文件优先级
+  const handlePrioritySave = async (name: string) => {
     if (authPriorityError === 'unsupported') return;
+    const currentValue = authPriority[name] ?? 0;
+    if (editingPriorityValue === currentValue) {
+      setEditingPriorityFile(null);
+      return;
+    }
     setSavingPriority(name);
     try {
-      await authFilesApi.updateAuthPriority(name, priority);
-      setAuthPriority((prev) => ({ ...prev, [name]: priority }));
+      await authFilesApi.updateAuthPriority(name, editingPriorityValue);
+      setAuthPriority((prev) => ({ ...prev, [name]: editingPriorityValue }));
       showNotification(t('auth_files.priority_updated'), 'success');
+      setEditingPriorityFile(null);
     } catch (err: unknown) {
       const status =
         typeof err === 'object' && err !== null && 'status' in err
@@ -938,6 +951,17 @@ export function AuthFilesPage() {
     } finally {
       setSavingPriority(null);
     }
+  };
+
+  // 取消编辑优先级
+  const handlePriorityCancel = () => {
+    setEditingPriorityFile(null);
+  };
+
+  // 开始编辑优先级
+  const handlePriorityEdit = (name: string, currentPriority: number) => {
+    setEditingPriorityFile(name);
+    setEditingPriorityValue(currentPriority);
   };
 
   // 渲染标签筛选器
@@ -1082,21 +1106,46 @@ export function AuthFilesPage() {
         {authPriorityError !== 'unsupported' && (
           <div className={styles.priorityRow}>
             <label className={styles.priorityLabel}>{t('common.priority')}</label>
-            <input
-              type="number"
-              className={styles.priorityInput}
-              value={currentPriority}
-              onChange={(e) => {
-                const value = parseInt(e.target.value, 10);
-                if (Number.isFinite(value)) {
-                  void handlePriorityChange(item.name, value);
-                }
-              }}
-              disabled={disableControls || isPrioritySaving}
-              min={-999}
-              max={999}
-            />
-            {isPrioritySaving && <LoadingSpinner size={14} />}
+            {editingPriorityFile === item.name ? (
+              <>
+                <input
+                  type="number"
+                  className={styles.priorityInput}
+                  value={editingPriorityValue}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value, 10);
+                    setEditingPriorityValue(Number.isFinite(value) ? value : 0);
+                  }}
+                  disabled={isPrioritySaving}
+                  autoFocus
+                />
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => handlePrioritySave(item.name)}
+                  disabled={isPrioritySaving}
+                  loading={isPrioritySaving}
+                >
+                  {t('common.confirm')}
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handlePriorityCancel}
+                  disabled={isPrioritySaving}
+                >
+                  {t('common.cancel')}
+                </Button>
+              </>
+            ) : (
+              <span
+                className={styles.priorityValue}
+                onClick={() => handlePriorityEdit(item.name, currentPriority)}
+                title={t('auth_files.click_to_edit_priority')}
+              >
+                {currentPriority}
+              </span>
+            )}
           </div>
         )}
 
@@ -1242,6 +1291,15 @@ export function AuthFilesPage() {
                 onChange={handlePageSizeChange}
               />
             </div>
+            {authPriorityError !== 'unsupported' && (
+              <div className={styles.filterItem}>
+                <ToggleSwitch
+                  checked={sortByPriority}
+                  onChange={setSortByPriority}
+                  label={t('auth_files.sort_by_priority')}
+                />
+              </div>
+            )}
           </div>
         </div>
 

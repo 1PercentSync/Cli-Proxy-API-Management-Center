@@ -239,14 +239,14 @@ export const authFilesApi = {
 
     // Handle array format: [{name, priority}, ...]
     if (Array.isArray(source)) {
-      source.forEach((item) => {
-        if (!item || typeof item !== 'object') return;
-        const name = String((item as Record<string, unknown>).name ?? '').trim();
-        const priority = (item as Record<string, unknown>).priority;
+      for (const item of source) {
+        if (!item || typeof item !== 'object') continue;
+        const name = String(item.name ?? '').trim();
+        const priority = item.priority;
         if (name && typeof priority === 'number' && Number.isFinite(priority)) {
           result[name] = priority;
         }
-      });
+      }
       return result;
     }
 

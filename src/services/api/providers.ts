@@ -84,6 +84,7 @@ const serializeVertexKey = (config: ProviderKeyConfig) => {
   if (headers) payload.headers = headers;
   const models = serializeVertexModelAliases(config.models);
   if (models && models.length) payload.models = models;
+  if (config.priority !== undefined) payload.priority = config.priority;
   return payload;
 };
 
