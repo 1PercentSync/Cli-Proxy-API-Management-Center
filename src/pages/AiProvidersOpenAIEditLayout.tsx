@@ -3,7 +3,12 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { providersApi } from '@/services/api';
-import { useAuthStore, useConfigStore, useNotificationStore, useOpenAIEditDraftStore } from '@/stores';
+import {
+  useAuthStore,
+  useConfigStore,
+  useNotificationStore,
+  useOpenAIEditDraftStore,
+} from '@/stores';
 import { entriesToModels, modelsToEntries } from '@/components/ui/modelInputListUtils';
 import type { ApiKeyEntry, OpenAIProviderConfig } from '@/types';
 import type { ModelInfo } from '@/utils/models';
@@ -43,6 +48,7 @@ const buildEmptyForm = (): OpenAIFormState => ({
   apiKeyEntries: [buildApiKeyEntry()],
   modelEntries: [{ name: '', alias: '' }],
   testModel: undefined,
+  priority: undefined,
 });
 
 const parseIndexParam = (value: string | undefined) => {
@@ -80,9 +86,7 @@ export function AiProvidersOpenAIEditLayout() {
   const [providers, setProviders] = useState<OpenAIProviderConfig[]>(
     () => config?.openaiCompatibility ?? []
   );
-  const [loading, setLoading] = useState(
-    () => !isCacheValid('openai-compatibility')
-  );
+  const [loading, setLoading] = useState(() => !isCacheValid('openai-compatibility'));
   const [saving, setSaving] = useState(false);
 
   const draftKey = useMemo(() => {
@@ -199,6 +203,7 @@ export function AiProvidersOpenAIEditLayout() {
         baseUrl: initialData.baseUrl,
         headers: headersToEntries(initialData.headers),
         testModel: initialData.testModel,
+        priority: initialData.priority,
         modelEntries,
         apiKeyEntries: initialData.apiKeyEntries?.length
           ? initialData.apiKeyEntries
@@ -273,7 +278,10 @@ export function AiProvidersOpenAIEditLayout() {
       });
 
       if (addedCount > 0) {
-        showNotification(t('ai_providers.openai_models_fetch_added', { count: addedCount }), 'success');
+        showNotification(
+          t('ai_providers.openai_models_fetch_added', { count: addedCount }),
+          'success'
+        );
       }
     },
     [setForm, showNotification, t]
@@ -292,6 +300,7 @@ export function AiProvidersOpenAIEditLayout() {
           proxyUrl: entry.proxyUrl?.trim() || undefined,
           headers: entry.headers,
         })),
+        priority: form.priority,
       };
       const resolvedTestModel = testModel.trim();
       if (resolvedTestModel) payload.testModel = resolvedTestModel;
@@ -335,28 +344,29 @@ export function AiProvidersOpenAIEditLayout() {
 
   return (
     <Outlet
-      context={{
-        hasIndexParam,
-        editIndex,
-        invalidIndexParam,
-        invalidIndex,
-        disableControls,
-        loading: resolvedLoading,
-        saving,
-        form,
-        setForm,
-        testModel,
-        setTestModel,
-        testStatus,
-        setTestStatus,
-        testMessage,
-        setTestMessage,
-        availableModels,
-        handleBack,
-        handleSave,
-        mergeDiscoveredModels,
-      } satisfies OpenAIEditOutletContext}
+      context={
+        {
+          hasIndexParam,
+          editIndex,
+          invalidIndexParam,
+          invalidIndex,
+          disableControls,
+          loading: resolvedLoading,
+          saving,
+          form,
+          setForm,
+          testModel,
+          setTestModel,
+          testStatus,
+          setTestStatus,
+          testMessage,
+          setTestMessage,
+          availableModels,
+          handleBack,
+          handleSave,
+          mergeDiscoveredModels,
+        } satisfies OpenAIEditOutletContext
+      }
     />
   );
 }
-

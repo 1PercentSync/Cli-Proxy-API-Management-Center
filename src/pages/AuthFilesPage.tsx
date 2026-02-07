@@ -293,12 +293,20 @@ export function AuthFilesPage() {
   );
   const [viewMode, setViewMode] = useState<'diagram' | 'list'>('list');
 
+  const [authPriority, setAuthPriority] = useState<Record<string, number>>({});
+  const [authPriorityError, setAuthPriorityError] = useState<'unsupported' | null>(null);
+  const [savingPriority, setSavingPriority] = useState<string | null>(null);
+  const [editingPriorityFile, setEditingPriorityFile] = useState<string | null>(null);
+  const [editingPriorityValue, setEditingPriorityValue] = useState<number>(0);
+  const [sortByPriority, setSortByPriority] = useState(true);
+
   const [prefixProxyEditor, setPrefixProxyEditor] = useState<PrefixProxyEditorState | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const loadingKeyStatsRef = useRef(false);
   const excludedUnsupportedRef = useRef(false);
   const mappingsUnsupportedRef = useRef(false);
+  const authPriorityUnsupportedRef = useRef(false);
   const diagramRef = useRef<ModelMappingDiagramRef | null>(null);
 
   const normalizeProviderKey = (value: string) => value.trim().toLowerCase();
@@ -372,8 +380,6 @@ export function AuthFilesPage() {
       cancelled = true;
     };
   }, [providerList, viewMode]);
-
-
 
   useEffect(() => {
     const persisted = readAuthFilesUiState();
@@ -559,9 +565,37 @@ export function AuthFilesPage() {
     }
   }, [showNotification, t]);
 
+  const loadAuthPriority = useCallback(async () => {
+    try {
+      const res = await authFilesApi.getAuthPriority();
+      authPriorityUnsupportedRef.current = false;
+      setAuthPriority(res || {});
+      setAuthPriorityError(null);
+    } catch (err: unknown) {
+      const status =
+        typeof err === 'object' && err !== null && 'status' in err
+          ? (err as { status?: unknown }).status
+          : undefined;
+
+      if (status === 404) {
+        setAuthPriority({});
+        setAuthPriorityError('unsupported');
+        if (!authPriorityUnsupportedRef.current) {
+          authPriorityUnsupportedRef.current = true;
+        }
+      }
+    }
+  }, []);
+
   const handleHeaderRefresh = useCallback(async () => {
-    await Promise.all([loadFiles(), loadKeyStats(), loadExcluded(), loadModelAlias()]);
-  }, [loadFiles, loadKeyStats, loadExcluded, loadModelAlias]);
+    await Promise.all([
+      loadFiles(),
+      loadKeyStats(),
+      loadExcluded(),
+      loadModelAlias(),
+      loadAuthPriority(),
+    ]);
+  }, [loadFiles, loadKeyStats, loadExcluded, loadModelAlias, loadAuthPriority]);
 
   useHeaderRefresh(handleHeaderRefresh);
 
@@ -570,7 +604,8 @@ export function AuthFilesPage() {
     loadKeyStats();
     loadExcluded();
     loadModelAlias();
-  }, [loadFiles, loadKeyStats, loadExcluded, loadModelAlias]);
+    loadAuthPriority();
+  }, [loadFiles, loadKeyStats, loadExcluded, loadModelAlias, loadAuthPriority]);
 
   // 定时刷新状态数据（每240秒）
   useInterval(loadKeyStats, 240_000);
@@ -597,7 +632,7 @@ export function AuthFilesPage() {
 
   // 过滤和搜索
   const filtered = useMemo(() => {
-    return files.filter((item) => {
+    const result = files.filter((item) => {
       const matchType = filter === 'all' || item.type === filter;
       const term = search.trim().toLowerCase();
       const matchSearch =
@@ -607,7 +642,20 @@ export function AuthFilesPage() {
         (item.provider || '').toString().toLowerCase().includes(term);
       return matchType && matchSearch;
     });
-  }, [files, filter, search]);
+
+    if (!sortByPriority) {
+      return result;
+    }
+
+    return [...result].sort((a, b) => {
+      const priorityA = authPriority[a.name] ?? 0;
+      const priorityB = authPriority[b.name] ?? 0;
+      if (priorityA !== priorityB) {
+        return priorityB - priorityA;
+      }
+      return a.name.localeCompare(b.name);
+    });
+  }, [files, filter, search, authPriority, sortByPriority]);
 
   // 分页计算
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
@@ -1367,6 +1415,48 @@ export function AuthFilesPage() {
     });
   };
 
+  const handlePrioritySave = async (name: string) => {
+    if (authPriorityError === 'unsupported') return;
+    const currentValue = authPriority[name] ?? 0;
+    if (editingPriorityValue === currentValue) {
+      setEditingPriorityFile(null);
+      return;
+    }
+
+    setSavingPriority(name);
+    try {
+      await authFilesApi.updateAuthPriority(name, editingPriorityValue);
+      await loadAuthPriority();
+      setEditingPriorityFile(null);
+      showNotification(t('auth_files.priority_updated'), 'success');
+    } catch (err: unknown) {
+      const status =
+        typeof err === 'object' && err !== null && 'status' in err
+          ? (err as { status?: unknown }).status
+          : undefined;
+
+      if (status === 404) {
+        setAuthPriorityError('unsupported');
+        authPriorityUnsupportedRef.current = true;
+        return;
+      }
+
+      const errorMessage = err instanceof Error ? err.message : '';
+      showNotification(`${t('auth_files.priority_update_failed')}: ${errorMessage}`, 'error');
+    } finally {
+      setSavingPriority(null);
+    }
+  };
+
+  const handlePriorityCancel = () => {
+    setEditingPriorityFile(null);
+  };
+
+  const handlePriorityEdit = (name: string, currentPriority: number) => {
+    setEditingPriorityFile(name);
+    setEditingPriorityValue(currentPriority);
+  };
+
   // 渲染标签筛选器
   const renderFilterTags = () => (
     <div className={styles.filterTags}>
@@ -1514,14 +1604,14 @@ export function AuthFilesPage() {
 
       updateQuotaState(quotaType, (prev) => ({
         ...prev,
-        [file.name]: config.buildLoadingState()
+        [file.name]: config.buildLoadingState(),
       }));
 
       try {
         const data = await config.fetchQuota(file, t);
         updateQuotaState(quotaType, (prev) => ({
           ...prev,
-          [file.name]: config.buildSuccessState(data)
+          [file.name]: config.buildSuccessState(data),
         }));
         showNotification(t('auth_files.quota_refresh_success', { name: file.name }), 'success');
       } catch (err: unknown) {
@@ -1529,7 +1619,7 @@ export function AuthFilesPage() {
         const status = getStatusFromError(err);
         updateQuotaState(quotaType, (prev) => ({
           ...prev,
-          [file.name]: config.buildErrorState(message, status)
+          [file.name]: config.buildErrorState(message, status),
         }));
         showNotification(
           t('auth_files.quota_refresh_failed', { name: file.name, message }),
@@ -1573,7 +1663,7 @@ export function AuthFilesPage() {
         ) : quotaStatus === 'error' ? (
           <div className={styles.quotaError}>
             {t(`${config.i18nPrefix}.load_failed`, {
-              message: quotaErrorMessage
+              message: quotaErrorMessage,
             })}
           </div>
         ) : quota ? (
@@ -1592,6 +1682,8 @@ export function AuthFilesPage() {
     const isAistudio = (item.type || '').toLowerCase() === 'aistudio';
     const showModelsButton = !isRuntimeOnly || isAistudio;
     const typeColor = getTypeColor(item.type || 'unknown');
+    const currentPriority = authPriority[item.name] ?? 0;
+    const isPrioritySaving = savingPriority === item.name;
 
     const quotaType =
       quotaFilterType && resolveQuotaType(item) === quotaFilterType ? quotaFilterType : null;
@@ -1612,9 +1704,7 @@ export function AuthFilesPage() {
         key={item.name}
         className={`${styles.fileCard} ${providerCardClass} ${item.disabled ? styles.fileCardDisabled : ''}`}
       >
-        <div
-          className={styles.fileCardLayout}
-        >
+        <div className={styles.fileCardLayout}>
           <div className={styles.fileCardMain}>
             <div className={styles.cardHeader}>
               <span
@@ -1650,6 +1740,52 @@ export function AuthFilesPage() {
 
             {/* 状态监测栏 */}
             {renderStatusBar(item)}
+
+            {authPriorityError !== 'unsupported' && (
+              <div className={styles.priorityRow}>
+                <label className={styles.priorityLabel}>{t('common.priority')}</label>
+                {editingPriorityFile === item.name ? (
+                  <>
+                    <input
+                      type="number"
+                      className={styles.priorityInput}
+                      value={editingPriorityValue}
+                      onChange={(e) => {
+                        const value = Number.parseInt(e.target.value, 10);
+                        setEditingPriorityValue(Number.isFinite(value) ? value : 0);
+                      }}
+                      disabled={isPrioritySaving}
+                      autoFocus
+                    />
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={() => void handlePrioritySave(item.name)}
+                      disabled={isPrioritySaving}
+                      loading={isPrioritySaving}
+                    >
+                      {t('common.confirm')}
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={handlePriorityCancel}
+                      disabled={isPrioritySaving}
+                    >
+                      {t('common.cancel')}
+                    </Button>
+                  </>
+                ) : (
+                  <span
+                    className={styles.priorityValue}
+                    onClick={() => handlePriorityEdit(item.name, currentPriority)}
+                    title={t('auth_files.click_to_edit_priority')}
+                  >
+                    {currentPriority}
+                  </span>
+                )}
+              </div>
+            )}
 
             {showQuotaLayout && quotaType && renderQuotaSection(item, quotaType)}
 
@@ -1823,6 +1959,15 @@ export function AuthFilesPage() {
                 }}
               />
             </div>
+            {authPriorityError !== 'unsupported' && (
+              <div className={styles.filterItem}>
+                <ToggleSwitch
+                  checked={sortByPriority}
+                  onChange={setSortByPriority}
+                  label={t('auth_files.sort_by_priority')}
+                />
+              </div>
+            )}
           </div>
         </div>
 

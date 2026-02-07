@@ -28,6 +28,7 @@ const buildEmptyForm = (): ProviderFormState => ({
   excludedModels: [],
   modelEntries: [{ name: '', alias: '' }],
   excludedText: '',
+  priority: undefined,
 });
 
 const parseIndexParam = (value: string | undefined) => {
@@ -68,7 +69,9 @@ export function AiProvidersCodexEditPage() {
   const invalidIndex = editIndex !== null && !initialData;
 
   const title =
-    editIndex !== null ? t('ai_providers.codex_edit_modal_title') : t('ai_providers.codex_add_modal_title');
+    editIndex !== null
+      ? t('ai_providers.codex_edit_modal_title')
+      : t('ai_providers.codex_add_modal_title');
 
   const handleBack = useCallback(() => {
     const state = location.state as LocationState;
@@ -157,6 +160,7 @@ export function AiProvidersCodexEditPage() {
         headers: buildHeaderObject(form.headers),
         models: entriesToModels(form.modelEntries),
         excludedModels: parseExcludedModels(form.excludedText),
+        priority: form.priority,
       };
 
       const nextList =
@@ -168,7 +172,9 @@ export function AiProvidersCodexEditPage() {
       updateConfigValue('codex-api-key', nextList);
       clearCache('codex-api-key');
       showNotification(
-        editIndex !== null ? t('notification.codex_config_updated') : t('notification.codex_config_added'),
+        editIndex !== null
+          ? t('notification.codex_config_updated')
+          : t('notification.codex_config_added'),
         'success'
       );
       handleBack();
@@ -259,6 +265,22 @@ export function AiProvidersCodexEditPage() {
               />
               <div className="hint">{t('ai_providers.excluded_models_hint')}</div>
             </div>
+            <Input
+              label={t('common.priority')}
+              type="number"
+              placeholder={t('ai_providers.priority_placeholder')}
+              value={form.priority?.toString() ?? ''}
+              onChange={(e) => {
+                const value = e.target.value.trim();
+                const parsed = Number.parseInt(value, 10);
+                setForm((prev) => ({
+                  ...prev,
+                  priority: value === '' || Number.isNaN(parsed) ? undefined : parsed,
+                }));
+              }}
+              hint={t('ai_providers.priority_hint')}
+              disabled={disableControls || saving}
+            />
           </>
         )}
       </Card>

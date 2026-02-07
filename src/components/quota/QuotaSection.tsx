@@ -86,7 +86,7 @@ const useQuotaPagination = <T,>(items: T[], defaultPageSize = 6): QuotaPaginatio
     goToNext,
     loading,
     loadingScope,
-    setLoading
+    setLoading,
   };
 };
 
@@ -95,13 +95,17 @@ interface QuotaSectionProps<TState extends QuotaStatusState, TData> {
   files: AuthFileItem[];
   loading: boolean;
   disabled: boolean;
+  authPriority: Record<string, number>;
+  sortByPriority: boolean;
 }
 
 export function QuotaSection<TState extends QuotaStatusState, TData>({
   config,
   files,
   loading,
-  disabled
+  disabled,
+  authPriority,
+  sortByPriority,
 }: QuotaSectionProps<TState, TData>) {
   const { t } = useTranslation();
   const resolvedTheme: ResolvedTheme = useThemeStore((state) => state.resolvedTheme);
@@ -114,10 +118,22 @@ export function QuotaSection<TState extends QuotaStatusState, TData>({
   const [viewMode, setViewMode] = useState<ViewMode>('paged');
   const [showTooManyWarning, setShowTooManyWarning] = useState(false);
 
-  const filteredFiles = useMemo(() => files.filter((file) => config.filterFn(file)), [
-    files,
-    config
-  ]);
+  const filteredFiles = useMemo(() => {
+    const result = files.filter((file) => config.filterFn(file));
+
+    if (!sortByPriority) {
+      return result;
+    }
+
+    return [...result].sort((a, b) => {
+      const priorityA = authPriority[a.name] ?? 0;
+      const priorityB = authPriority[b.name] ?? 0;
+      if (priorityA !== priorityB) {
+        return priorityB - priorityA;
+      }
+      return a.name.localeCompare(b.name);
+    });
+  }, [files, config, authPriority, sortByPriority]);
   const showAllAllowed = filteredFiles.length <= MAX_SHOW_ALL_THRESHOLD;
   const effectiveViewMode: ViewMode = viewMode === 'all' && !showAllAllowed ? 'paged' : viewMode;
 
@@ -130,7 +146,7 @@ export function QuotaSection<TState extends QuotaStatusState, TData>({
     goToPrev,
     goToNext,
     loading: sectionLoading,
-    setLoading
+    setLoading,
   } = useQuotaPagination(filteredFiles);
 
   useEffect(() => {
@@ -206,9 +222,7 @@ export function QuotaSection<TState extends QuotaStatusState, TData>({
     <div className={styles.titleWrapper}>
       <span>{t(`${config.i18nPrefix}.title`)}</span>
       {filteredFiles.length > 0 && (
-        <span className={styles.countBadge}>
-          {filteredFiles.length}
-        </span>
+        <span className={styles.countBadge}>{filteredFiles.length}</span>
       )}
     </div>
   );
@@ -279,19 +293,14 @@ export function QuotaSection<TState extends QuotaStatusState, TData>({
           </div>
           {filteredFiles.length > pageSize && effectiveViewMode === 'paged' && (
             <div className={styles.pagination}>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={goToPrev}
-                disabled={currentPage <= 1}
-              >
+              <Button variant="secondary" size="sm" onClick={goToPrev} disabled={currentPage <= 1}>
                 {t('auth_files.pagination_prev')}
               </Button>
               <div className={styles.pageInfo}>
                 {t('auth_files.pagination_info', {
                   current: currentPage,
                   total: totalPages,
-                  count: filteredFiles.length
+                  count: filteredFiles.length,
                 })}
               </div>
               <Button

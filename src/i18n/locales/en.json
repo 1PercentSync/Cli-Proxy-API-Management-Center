@@ -38,6 +38,7 @@
     "quota_update_required": "Please update the CPA version or check for updates",
     "quota_check_credential": "Please check the credential status",
     "copy": "Copy",
+    "priority": "Priority",
     "custom_headers_label": "Custom Headers",
     "custom_headers_hint": "Optional HTTP headers to send with the request. Leave blank to remove.",
     "custom_headers_add": "Add Header",
@@ -333,7 +334,10 @@
     "openai_test_success": "Test succeeded. The model responded.",
     "openai_test_failed": "Test failed",
     "openai_test_select_placeholder": "Choose from current models",
-    "openai_test_select_empty": "No models configured. Add models first"
+    "openai_test_select_empty": "No models configured. Add models first",
+    "priority_label": "Priority",
+    "priority_placeholder": "e.g. 100",
+    "priority_hint": "Higher values mean higher priority. Equal priorities sort by name."
   },
   "auth_files": {
     "title": "Auth Files Management",
@@ -407,6 +411,10 @@
     "models_unsupported_desc": "Please update CLI Proxy API to the latest version and try again",
     "models_excluded_badge": "Disabled",
     "models_excluded_hint": "This OAuth model is disabled",
+    "priority_updated": "Priority updated",
+    "priority_update_failed": "Failed to update priority",
+    "sort_by_priority": "Sort by priority",
+    "click_to_edit_priority": "Click to edit priority",
     "status_toggle_label": "Enabled",
     "status_enabled_success": "\"{{name}}\" enabled",
     "status_disabled_success": "\"{{name}}\" disabled",
@@ -985,7 +993,8 @@
     "title": "Quota Management",
     "description": "Monitor OAuth quota status for Antigravity, Codex, and Gemini CLI credentials.",
     "refresh_files": "Refresh auth files",
-    "refresh_files_and_quota": "Refresh files & quota"
+    "refresh_files_and_quota": "Refresh files & quota",
+    "sort_by_priority": "Sort by priority"
   },
   "system_info": {
     "title": "Management Center Info",

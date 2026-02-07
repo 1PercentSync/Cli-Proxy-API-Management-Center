@@ -26,6 +26,7 @@ const buildEmptyForm = (): VertexFormState => ({
   headers: [],
   models: [],
   modelEntries: [{ name: '', alias: '' }],
+  priority: undefined,
 });
 
 const parseIndexParam = (value: string | undefined) => {
@@ -66,7 +67,9 @@ export function AiProvidersVertexEditPage() {
   const invalidIndex = editIndex !== null && !initialData;
 
   const title =
-    editIndex !== null ? t('ai_providers.vertex_edit_modal_title') : t('ai_providers.vertex_add_modal_title');
+    editIndex !== null
+      ? t('ai_providers.vertex_edit_modal_title')
+      : t('ai_providers.vertex_add_modal_title');
 
   const handleBack = useCallback(() => {
     const state = location.state as LocationState;
@@ -165,6 +168,7 @@ export function AiProvidersVertexEditPage() {
             return { name, alias };
           })
           .filter(Boolean) as ProviderKeyConfig['models'],
+        priority: form.priority,
       };
 
       const nextList =
@@ -176,7 +180,9 @@ export function AiProvidersVertexEditPage() {
       updateConfigValue('vertex-api-key', nextList);
       clearCache('vertex-api-key');
       showNotification(
-        editIndex !== null ? t('notification.vertex_config_updated') : t('notification.vertex_config_added'),
+        editIndex !== null
+          ? t('notification.vertex_config_updated')
+          : t('notification.vertex_config_added'),
         'success'
       );
       handleBack();
@@ -270,6 +276,22 @@ export function AiProvidersVertexEditPage() {
               />
               <div className="hint">{t('ai_providers.vertex_models_hint')}</div>
             </div>
+            <Input
+              label={t('common.priority')}
+              type="number"
+              placeholder={t('ai_providers.priority_placeholder')}
+              value={form.priority?.toString() ?? ''}
+              onChange={(e) => {
+                const value = e.target.value.trim();
+                const parsed = Number.parseInt(value, 10);
+                setForm((prev) => ({
+                  ...prev,
+                  priority: value === '' || Number.isNaN(parsed) ? undefined : parsed,
+                }));
+              }}
+              hint={t('ai_providers.priority_hint')}
+              disabled={disableControls || saving}
+            />
           </>
         )}
       </Card>

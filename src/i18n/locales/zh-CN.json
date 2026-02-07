@@ -38,6 +38,7 @@
     "quota_update_required": "请更新 CPA 版本或检查更新",
     "quota_check_credential": "请检查凭证状态",
     "copy": "复制",
+    "priority": "优先级",
     "custom_headers_label": "自定义请求头",
     "custom_headers_hint": "可选，设置需要附带到请求中的 HTTP 头，名称和值均不能为空。",
     "custom_headers_add": "添加请求头",
@@ -333,7 +334,10 @@
     "openai_test_success": "测试成功，模型可用。",
     "openai_test_failed": "测试失败",
     "openai_test_select_placeholder": "从当前模型列表选择",
-    "openai_test_select_empty": "当前未配置模型，请先添加模型"
+    "openai_test_select_empty": "当前未配置模型，请先添加模型",
+    "priority_label": "优先级",
+    "priority_placeholder": "例如: 100",
+    "priority_hint": "数值越大优先级越高，相同优先级按名称排序。"
   },
   "auth_files": {
     "title": "认证文件管理",
@@ -407,6 +411,10 @@
     "models_unsupported_desc": "请更新 CLI Proxy API 到最新版本后重试",
     "models_excluded_badge": "已禁用",
     "models_excluded_hint": "此 OAuth 模型已被禁用",
+    "priority_updated": "优先级已更新",
+    "priority_update_failed": "优先级更新失败",
+    "sort_by_priority": "按优先级排序",
+    "click_to_edit_priority": "点击修改优先级",
     "status_toggle_label": "启用",
     "status_enabled_success": "已启用 \"{{name}}\"",
     "status_disabled_success": "已停用 \"{{name}}\"",
@@ -985,7 +993,8 @@
     "title": "配额管理",
     "description": "集中查看 OAuth 额度与剩余情况",
     "refresh_files": "刷新认证文件",
-    "refresh_files_and_quota": "刷新认证文件&额度"
+    "refresh_files_and_quota": "刷新认证文件&额度",
+    "sort_by_priority": "按优先级排序"
   },
   "system_info": {
     "title": "管理中心信息",

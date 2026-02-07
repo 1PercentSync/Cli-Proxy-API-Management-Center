@@ -2,16 +2,17 @@
  * Quota management page - coordinates the three quota sections.
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useHeaderRefresh } from '@/hooks/useHeaderRefresh';
 import { useAuthStore } from '@/stores';
 import { authFilesApi, configFileApi } from '@/services/api';
+import { ToggleSwitch } from '@/components/ui/ToggleSwitch';
 import {
   QuotaSection,
   ANTIGRAVITY_CONFIG,
   CODEX_CONFIG,
-  GEMINI_CLI_CONFIG
+  GEMINI_CLI_CONFIG,
 } from '@/components/quota';
 import type { AuthFileItem } from '@/types';
 import styles from './QuotaPage.module.scss';
@@ -23,6 +24,11 @@ export function QuotaPage() {
   const [files, setFiles] = useState<AuthFileItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  const [authPriority, setAuthPriority] = useState<Record<string, number>>({});
+  const [authPriorityError, setAuthPriorityError] = useState<'unsupported' | null>(null);
+  const [sortByPriority, setSortByPriority] = useState(true);
+  const authPriorityUnsupportedRef = useRef(false);
 
   const disableControls = connectionStatus !== 'connected';
 
@@ -49,22 +55,54 @@ export function QuotaPage() {
     }
   }, [t]);
 
+  const loadAuthPriority = useCallback(async () => {
+    try {
+      const res = await authFilesApi.getAuthPriority();
+      authPriorityUnsupportedRef.current = false;
+      setAuthPriority(res || {});
+      setAuthPriorityError(null);
+    } catch (err: unknown) {
+      const status =
+        typeof err === 'object' && err !== null && 'status' in err
+          ? (err as { status?: unknown }).status
+          : undefined;
+
+      if (status === 404) {
+        setAuthPriority({});
+        setAuthPriorityError('unsupported');
+        if (!authPriorityUnsupportedRef.current) {
+          authPriorityUnsupportedRef.current = true;
+        }
+      }
+    }
+  }, []);
+
   const handleHeaderRefresh = useCallback(async () => {
-    await Promise.all([loadConfig(), loadFiles()]);
-  }, [loadConfig, loadFiles]);
+    await Promise.all([loadConfig(), loadFiles(), loadAuthPriority()]);
+  }, [loadConfig, loadFiles, loadAuthPriority]);
 
   useHeaderRefresh(handleHeaderRefresh);
 
   useEffect(() => {
     loadFiles();
     loadConfig();
-  }, [loadFiles, loadConfig]);
+    loadAuthPriority();
+  }, [loadFiles, loadConfig, loadAuthPriority]);
 
   return (
     <div className={styles.container}>
       <div className={styles.pageHeader}>
         <h1 className={styles.pageTitle}>{t('quota_management.title')}</h1>
         <p className={styles.description}>{t('quota_management.description')}</p>
+        {authPriorityError !== 'unsupported' && (
+          <div className={styles.sortToggle}>
+            <ToggleSwitch
+              checked={sortByPriority}
+              onChange={setSortByPriority}
+              label={t('quota_management.sort_by_priority')}
+            />
+          </div>
+        )}
       </div>
 
       {error && <div className={styles.errorBox}>{error}</div>}
@@ -74,18 +112,24 @@ export function QuotaPage() {
         files={files}
         loading={loading}
         disabled={disableControls}
+        authPriority={authPriority}
+        sortByPriority={sortByPriority}
       />
       <QuotaSection
         config={CODEX_CONFIG}
         files={files}
         loading={loading}
         disabled={disableControls}
+        authPriority={authPriority}
+        sortByPriority={sortByPriority}
       />
       <QuotaSection
         config={GEMINI_CLI_CONFIG}
         files={files}
         loading={loading}
         disabled={disableControls}
+        authPriority={authPriority}
+        sortByPriority={sortByPriority}
       />
     </div>
   );

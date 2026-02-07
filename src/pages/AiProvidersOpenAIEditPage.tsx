@@ -366,6 +366,22 @@ export function AiProvidersOpenAIEditPage() {
               <label>{t('ai_providers.openai_add_modal_keys_label')}</label>
               {renderKeyEntries(form.apiKeyEntries)}
             </div>
+            <Input
+              label={t('common.priority')}
+              type="number"
+              placeholder={t('ai_providers.priority_placeholder')}
+              value={form.priority?.toString() ?? ''}
+              onChange={(e) => {
+                const value = e.target.value.trim();
+                const parsed = Number.parseInt(value, 10);
+                setForm((prev) => ({
+                  ...prev,
+                  priority: value === '' || Number.isNaN(parsed) ? undefined : parsed,
+                }));
+              }}
+              hint={t('ai_providers.priority_hint')}
+              disabled={saving || disableControls}
+            />
           </>
         )}
       </Card>

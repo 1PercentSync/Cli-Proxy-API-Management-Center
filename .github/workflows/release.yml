@@ -2,8 +2,11 @@ name: Build and Release
 
 on:
   push:
+    branches:
+      - main
     tags:
       - 'v*'
+  workflow_dispatch:
 
 jobs:
   build-and-release:
@@ -28,10 +31,21 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Determine version
+        id: version
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            echo "version=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+            echo "is_tag=true" >> $GITHUB_OUTPUT
+          else
+            echo "version=latest" >> $GITHUB_OUTPUT
+            echo "is_tag=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Build all-in-one HTML
         run: npm run build
         env:
-          VERSION: ${{ github.ref_name }}
+          VERSION: ${{ steps.version.outputs.version }}
 
       - name: Prepare release assets
         run: |
@@ -39,7 +53,8 @@ jobs:
           mv index.html management.html
           ls -lh management.html
 
-      - name: Generate release notes
+      - name: Generate release notes (tag)
+        if: steps.version.outputs.is_tag == 'true'
         run: |
           set -euo pipefail
           current_tag="${GITHUB_REF_NAME}"
@@ -53,9 +68,42 @@ jobs:
           : > release-notes.md
           git log --pretty=format:"- %h %s" "${range}" >> release-notes.md
 
-      - name: Create Release
+      - name: Generate release notes (main)
+        if: steps.version.outputs.is_tag == 'false'
+        run: |
+          echo "Latest build from main branch" > release-notes.md
+          echo "" >> release-notes.md
+          echo "**Commit:** \`${{ github.sha }}\`" >> release-notes.md
+          echo "**Updated:** $(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> release-notes.md
+          echo "" >> release-notes.md
+          echo "### Recent changes:" >> release-notes.md
+          git log --pretty=format:"- %h %s" -10 >> release-notes.md
+
+      - name: Create Release (tag)
+        if: steps.version.outputs.is_tag == 'true'
         uses: softprops/action-gh-release@v1
         with:
+          files: dist/management.html
+          body_path: release-notes.md
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Delete existing latest release
+        if: steps.version.outputs.is_tag == 'false'
+        run: |
+          gh release delete latest --yes || true
+          git push origin :refs/tags/latest || true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Release (latest)
+        if: steps.version.outputs.is_tag == 'false'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: latest
+          name: Latest Build
           files: dist/management.html
           body_path: release-notes.md
           draft: false

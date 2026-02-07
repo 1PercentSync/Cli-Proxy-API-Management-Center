@@ -29,6 +29,7 @@ const buildEmptyForm = (): ProviderFormState => ({
   excludedModels: [],
   modelEntries: [{ name: '', alias: '' }],
   excludedText: '',
+  priority: undefined,
 });
 
 const parseIndexParam = (value: string | undefined) => {
@@ -157,6 +158,7 @@ export function AiProvidersClaudeEditPage() {
           })
           .filter(Boolean) as ProviderKeyConfig['models'],
         excludedModels: parseExcludedModels(form.excludedText),
+        priority: form.priority,
       };
 
       const nextList =
@@ -168,7 +170,9 @@ export function AiProvidersClaudeEditPage() {
       updateConfigValue('claude-api-key', nextList);
       clearCache('claude-api-key');
       showNotification(
-        editIndex !== null ? t('notification.claude_config_updated') : t('notification.claude_config_added'),
+        editIndex !== null
+          ? t('notification.claude_config_updated')
+          : t('notification.claude_config_added'),
         'success'
       );
       handleBack();
@@ -270,6 +274,22 @@ export function AiProvidersClaudeEditPage() {
               />
               <div className="hint">{t('ai_providers.excluded_models_hint')}</div>
             </div>
+            <Input
+              label={t('common.priority')}
+              type="number"
+              placeholder={t('ai_providers.priority_placeholder')}
+              value={form.priority?.toString() ?? ''}
+              onChange={(e) => {
+                const value = e.target.value.trim();
+                const parsed = Number.parseInt(value, 10);
+                setForm((prev) => ({
+                  ...prev,
+                  priority: value === '' || Number.isNaN(parsed) ? undefined : parsed,
+                }));
+              }}
+              hint={t('ai_providers.priority_hint')}
+              disabled={disableControls || saving}
+            />
           </>
         )}
       </Card>
