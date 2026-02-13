@@ -26,6 +26,17 @@
   margin: 0;
 }
 
+.sortToggle {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+
+  label {
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
+}
+
 .headerActions {
   display: flex;
   gap: $spacing-sm;
@@ -149,27 +160,19 @@
 }
 
 .claudeCard {
-  background-image: linear-gradient(180deg,
-      rgba(252, 228, 236, 0.18),
-      rgba(252, 228, 236, 0));
+  background-image: linear-gradient(180deg, rgba(252, 228, 236, 0.18), rgba(252, 228, 236, 0));
 }
 
 .antigravityCard {
-  background-image: linear-gradient(180deg,
-      rgba(224, 247, 250, 0.12),
-      rgba(224, 247, 250, 0));
+  background-image: linear-gradient(180deg, rgba(224, 247, 250, 0.12), rgba(224, 247, 250, 0));
 }
 
 .codexCard {
-  background-image: linear-gradient(180deg,
-      rgba(255, 243, 224, 0.18),
-      rgba(255, 243, 224, 0));
+  background-image: linear-gradient(180deg, rgba(255, 243, 224, 0.18), rgba(255, 243, 224, 0));
 }
 
 .geminiCliCard {
-  background-image: linear-gradient(180deg,
-      rgba(231, 239, 255, 0.2),
-      rgba(231, 239, 255, 0));
+  background-image: linear-gradient(180deg, rgba(231, 239, 255, 0.2), rgba(231, 239, 255, 0));
 }
 
 .quotaSection {
@@ -317,7 +320,10 @@
   display: flex;
   flex-direction: column;
   gap: $spacing-sm;
-  transition: transform $transition-fast, box-shadow $transition-fast, border-color $transition-fast;
+  transition:
+    transform $transition-fast,
+    box-shadow $transition-fast,
+    border-color $transition-fast;
 
   &:hover {
     transform: translateY(-2px);
