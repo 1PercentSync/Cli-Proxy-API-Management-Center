@@ -66,7 +66,9 @@ export function AiProvidersVertexEditPage() {
   const invalidIndex = editIndex !== null && !initialData;
 
   const title =
-    editIndex !== null ? t('ai_providers.vertex_edit_modal_title') : t('ai_providers.vertex_add_modal_title');
+    editIndex !== null
+      ? t('ai_providers.vertex_edit_modal_title')
+      : t('ai_providers.vertex_add_modal_title');
 
   const handleBack = useCallback(() => {
     const state = location.state as LocationState;
@@ -165,6 +167,7 @@ export function AiProvidersVertexEditPage() {
             return { name, alias };
           })
           .filter(Boolean) as ProviderKeyConfig['models'],
+        priority: Number.isFinite(form.priority) ? form.priority : undefined,
       };
 
       const nextList =
@@ -176,7 +179,9 @@ export function AiProvidersVertexEditPage() {
       updateConfigValue('vertex-api-key', nextList);
       clearCache('vertex-api-key');
       showNotification(
-        editIndex !== null ? t('notification.vertex_config_updated') : t('notification.vertex_config_added'),
+        editIndex !== null
+          ? t('notification.vertex_config_updated')
+          : t('notification.vertex_config_added'),
         'success'
       );
       handleBack();
@@ -274,6 +279,24 @@ export function AiProvidersVertexEditPage() {
               />
               <div className="hint">{t('ai_providers.vertex_models_hint')}</div>
             </div>
+            <Input
+              label={t('ai_providers.priority_label')}
+              placeholder={t('ai_providers.priority_placeholder')}
+              type="number"
+              value={
+                form.priority !== undefined && form.priority !== null ? String(form.priority) : ''
+              }
+              onChange={(e) => {
+                const raw = e.target.value.trim();
+                const parsed = raw === '' ? undefined : Number(raw);
+                setForm((prev) => ({
+                  ...prev,
+                  priority: parsed !== undefined && Number.isFinite(parsed) ? parsed : undefined,
+                }));
+              }}
+              hint={t('ai_providers.priority_hint')}
+              disabled={disableControls || saving}
+            />
           </>
         )}
       </Card>

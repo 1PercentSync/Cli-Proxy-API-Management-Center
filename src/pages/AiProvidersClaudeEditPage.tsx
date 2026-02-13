@@ -157,6 +157,7 @@ export function AiProvidersClaudeEditPage() {
           })
           .filter(Boolean) as ProviderKeyConfig['models'],
         excludedModels: parseExcludedModels(form.excludedText),
+        priority: Number.isFinite(form.priority) ? form.priority : undefined,
       };
 
       const nextList =
@@ -168,7 +169,9 @@ export function AiProvidersClaudeEditPage() {
       updateConfigValue('claude-api-key', nextList);
       clearCache('claude-api-key');
       showNotification(
-        editIndex !== null ? t('notification.claude_config_updated') : t('notification.claude_config_added'),
+        editIndex !== null
+          ? t('notification.claude_config_updated')
+          : t('notification.claude_config_added'),
         'success'
       );
       handleBack();
@@ -262,6 +265,24 @@ export function AiProvidersClaudeEditPage() {
                 disabled={disableControls || saving}
               />
             </div>
+            <Input
+              label={t('ai_providers.priority_label')}
+              placeholder={t('ai_providers.priority_placeholder')}
+              type="number"
+              value={
+                form.priority !== undefined && form.priority !== null ? String(form.priority) : ''
+              }
+              onChange={(e) => {
+                const raw = e.target.value.trim();
+                const parsed = raw === '' ? undefined : Number(raw);
+                setForm((prev) => ({
+                  ...prev,
+                  priority: parsed !== undefined && Number.isFinite(parsed) ? parsed : undefined,
+                }));
+              }}
+              hint={t('ai_providers.priority_hint')}
+              disabled={disableControls || saving}
+            />
             <div className="form-group">
               <label>{t('ai_providers.excluded_models_label')}</label>
               <textarea

@@ -31,12 +31,7 @@ function StatusLoadingIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className={styles.statusIconSpin}>
       <circle cx="8" cy="8" r="7" stroke="currentColor" strokeOpacity="0.25" strokeWidth="2" />
-      <path
-        d="M8 1A7 7 0 0 1 8 15"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
+      <path d="M8 1A7 7 0 0 1 8 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
     </svg>
   );
 }
@@ -136,7 +131,13 @@ export function AiProvidersOpenAIEditPage() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleBack]);
 
-  const canSave = !disableControls && !loading && !saving && !invalidIndexParam && !invalidIndex && !isTestingKeys;
+  const canSave =
+    !disableControls &&
+    !loading &&
+    !saving &&
+    !invalidIndexParam &&
+    !invalidIndex &&
+    !isTestingKeys;
   const hasConfiguredModels = form.modelEntries.some((entry) => entry.name.trim());
   const hasTestableKeys = form.apiKeyEntries.some((entry) => entry.apiKey?.trim());
   const connectivityConfigSignature = useMemo(() => {
@@ -183,7 +184,10 @@ export function AiProvidersOpenAIEditPage() {
 
       const keyEntry = form.apiKeyEntries[keyIndex];
       if (!keyEntry?.apiKey?.trim()) {
-        setDraftKeyTestStatus(keyIndex, { status: 'error', message: t('notification.openai_test_key_required') });
+        setDraftKeyTestStatus(keyIndex, {
+          status: 'error',
+          message: t('notification.openai_test_key_required'),
+        });
         return false;
       }
 
@@ -241,7 +245,16 @@ export function AiProvidersOpenAIEditPage() {
         return false;
       }
     },
-    [form.baseUrl, form.apiKeyEntries, form.headers, testModel, availableModels, t, setDraftKeyTestStatus, showNotification]
+    [
+      form.baseUrl,
+      form.apiKeyEntries,
+      form.headers,
+      testModel,
+      availableModels,
+      t,
+      setDraftKeyTestStatus,
+      showNotification,
+    ]
   );
 
   const testSingleKey = useCallback(
@@ -321,7 +334,10 @@ export function AiProvidersOpenAIEditPage() {
         setTestMessage(message);
         showNotification(message, 'error');
       } else {
-        const message = t('ai_providers.openai_test_all_partial', { success: successCount, failed: failCount });
+        const message = t('ai_providers.openai_test_all_partial', {
+          success: successCount,
+          failed: failCount,
+        });
         setTestStatus('error');
         setTestMessage(message);
         showNotification(message, 'warning');
@@ -519,6 +535,24 @@ export function AiProvidersOpenAIEditPage() {
               onChange={(e) => setForm((prev) => ({ ...prev, baseUrl: e.target.value }))}
               disabled={saving || disableControls || isTestingKeys}
             />
+            <Input
+              label={t('ai_providers.priority_label')}
+              placeholder={t('ai_providers.priority_placeholder')}
+              type="number"
+              value={
+                form.priority !== undefined && form.priority !== null ? String(form.priority) : ''
+              }
+              onChange={(e) => {
+                const raw = e.target.value.trim();
+                const parsed = raw === '' ? undefined : Number(raw);
+                setForm((prev) => ({
+                  ...prev,
+                  priority: parsed !== undefined && Number.isFinite(parsed) ? parsed : undefined,
+                }));
+              }}
+              hint={t('ai_providers.priority_hint')}
+              disabled={saving || disableControls || isTestingKeys}
+            />
 
             <HeaderInputList
               entries={form.headers}
@@ -544,10 +578,12 @@ export function AiProvidersOpenAIEditPage() {
                   <Button
                     variant="secondary"
                     size="sm"
-                    onClick={() => setForm((prev) => ({
-                      ...prev,
-                      modelEntries: [...prev.modelEntries, { name: '', alias: '' }]
-                    }))}
+                    onClick={() =>
+                      setForm((prev) => ({
+                        ...prev,
+                        modelEntries: [...prev.modelEntries, { name: '', alias: '' }],
+                      }))
+                    }
                     disabled={saving || disableControls || isTestingKeys}
                   >
                     {t('ai_providers.openai_models_add_btn')}
@@ -585,7 +621,9 @@ export function AiProvidersOpenAIEditPage() {
               {/* 测试区域 */}
               <div className={styles.modelTestPanel}>
                 <div className={styles.modelTestMeta}>
-                  <label className={styles.modelTestLabel}>{t('ai_providers.openai_test_title')}</label>
+                  <label className={styles.modelTestLabel}>
+                    {t('ai_providers.openai_test_title')}
+                  </label>
                   <span className={styles.modelTestHint}>{t('ai_providers.openai_test_hint')}</span>
                 </div>
                 <div className={styles.modelTestControls}>
@@ -597,7 +635,13 @@ export function AiProvidersOpenAIEditPage() {
                       setTestStatus('idle');
                       setTestMessage('');
                     }}
-                    disabled={saving || disableControls || isTestingKeys || testStatus === 'loading' || availableModels.length === 0}
+                    disabled={
+                      saving ||
+                      disableControls ||
+                      isTestingKeys ||
+                      testStatus === 'loading' ||
+                      availableModels.length === 0
+                    }
                   >
                     <option value="">
                       {availableModels.length
@@ -622,7 +666,14 @@ export function AiProvidersOpenAIEditPage() {
                     size="sm"
                     onClick={() => void testAllKeys()}
                     loading={testStatus === 'loading'}
-                    disabled={saving || disableControls || isTestingKeys || testStatus === 'loading' || !hasConfiguredModels || !hasTestableKeys}
+                    disabled={
+                      saving ||
+                      disableControls ||
+                      isTestingKeys ||
+                      testStatus === 'loading' ||
+                      !hasConfiguredModels ||
+                      !hasTestableKeys
+                    }
                     title={t('ai_providers.openai_test_all_hint')}
                     className={styles.modelTestAllButton}
                   >

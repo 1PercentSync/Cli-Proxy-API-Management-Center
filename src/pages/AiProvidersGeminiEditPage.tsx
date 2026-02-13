@@ -64,7 +64,9 @@ export function AiProvidersGeminiEditPage() {
   const invalidIndex = editIndex !== null && !initialData;
 
   const title =
-    editIndex !== null ? t('ai_providers.gemini_edit_modal_title') : t('ai_providers.gemini_add_modal_title');
+    editIndex !== null
+      ? t('ai_providers.gemini_edit_modal_title')
+      : t('ai_providers.gemini_add_modal_title');
 
   const handleBack = useCallback(() => {
     const state = location.state as LocationState;
@@ -140,6 +142,7 @@ export function AiProvidersGeminiEditPage() {
         baseUrl: form.baseUrl?.trim() || undefined,
         headers: buildHeaderObject(form.headers),
         excludedModels: parseExcludedModels(form.excludedText),
+        priority: Number.isFinite(form.priority) ? form.priority : undefined,
       };
 
       const nextList =
@@ -151,7 +154,9 @@ export function AiProvidersGeminiEditPage() {
       updateConfigValue('gemini-api-key', nextList);
       clearCache('gemini-api-key');
       showNotification(
-        editIndex !== null ? t('notification.gemini_key_updated') : t('notification.gemini_key_added'),
+        editIndex !== null
+          ? t('notification.gemini_key_updated')
+          : t('notification.gemini_key_added'),
         'success'
       );
       handleBack();
@@ -226,6 +231,24 @@ export function AiProvidersGeminiEditPage() {
               valuePlaceholder={t('common.custom_headers_value_placeholder')}
               removeButtonTitle={t('common.delete')}
               removeButtonAriaLabel={t('common.delete')}
+              disabled={disableControls || saving}
+            />
+            <Input
+              label={t('ai_providers.priority_label')}
+              placeholder={t('ai_providers.priority_placeholder')}
+              type="number"
+              value={
+                form.priority !== undefined && form.priority !== null ? String(form.priority) : ''
+              }
+              onChange={(e) => {
+                const raw = e.target.value.trim();
+                const parsed = raw === '' ? undefined : Number(raw);
+                setForm((prev) => ({
+                  ...prev,
+                  priority: parsed !== undefined && Number.isFinite(parsed) ? parsed : undefined,
+                }));
+              }}
+              hint={t('ai_providers.priority_hint')}
               disabled={disableControls || saving}
             />
             <div className="form-group">
