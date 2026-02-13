@@ -376,6 +376,9 @@ export function AuthFilesPage() {
 
   const [prefixProxyEditor, setPrefixProxyEditor] = useState<PrefixProxyEditorState | null>(null);
 
+  const [authPriority, setAuthPriority] = useState<Record<string, number>>({});
+  const [sortByPriority, setSortByPriority] = useState(true);
+
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const loadingKeyStatsRef = useRef(false);
   const excludedUnsupportedRef = useRef(false);
@@ -453,8 +456,6 @@ export function AuthFilesPage() {
       cancelled = true;
     };
   }, [providerList, viewMode]);
-
-
 
   useEffect(() => {
     const persisted = readAuthFilesUiState();
@@ -665,9 +666,24 @@ export function AuthFilesPage() {
     }
   }, [showNotification, t]);
 
+  const loadAuthPriority = useCallback(async () => {
+    try {
+      const res = await authFilesApi.getAuthPriority();
+      setAuthPriority(res);
+    } catch {
+      // 静默降级：后端不支持时不弹错误
+    }
+  }, []);
+
   const handleHeaderRefresh = useCallback(async () => {
-    await Promise.all([loadFiles(), loadKeyStats(), loadExcluded(), loadModelAlias()]);
-  }, [loadFiles, loadKeyStats, loadExcluded, loadModelAlias]);
+    await Promise.all([
+      loadFiles(),
+      loadKeyStats(),
+      loadExcluded(),
+      loadModelAlias(),
+      loadAuthPriority(),
+    ]);
+  }, [loadFiles, loadKeyStats, loadExcluded, loadModelAlias, loadAuthPriority]);
 
   useHeaderRefresh(handleHeaderRefresh);
 
@@ -677,7 +693,8 @@ export function AuthFilesPage() {
     loadKeyStats();
     loadExcluded();
     loadModelAlias();
-  }, [isCurrentLayer, loadFiles, loadKeyStats, loadExcluded, loadModelAlias]);
+    loadAuthPriority();
+  }, [isCurrentLayer, loadFiles, loadKeyStats, loadExcluded, loadModelAlias, loadAuthPriority]);
 
   // 定时刷新状态数据（每240秒）
   useInterval(loadKeyStats, isCurrentLayer ? 240_000 : null);
@@ -704,7 +721,7 @@ export function AuthFilesPage() {
 
   // 过滤和搜索
   const filtered = useMemo(() => {
-    return files.filter((item) => {
+    const result = files.filter((item) => {
       const matchType = filter === 'all' || item.type === filter;
       const term = search.trim().toLowerCase();
       const matchSearch =
@@ -714,7 +731,11 @@ export function AuthFilesPage() {
         (item.provider || '').toString().toLowerCase().includes(term);
       return matchType && matchSearch;
     });
-  }, [files, filter, search]);
+    if (sortByPriority) {
+      result.sort((a, b) => (authPriority[b.name] ?? 0) - (authPriority[a.name] ?? 0));
+    }
+    return result;
+  }, [files, filter, search, sortByPriority, authPriority]);
 
   // 分页计算
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
@@ -992,8 +1013,7 @@ export function AuthFilesPage() {
           proxyUrl,
           priority: priority !== undefined ? String(priority) : '',
           excludedModelsText: excludedModels.join('\n'),
-          disableCooling:
-            disableCooling === undefined ? '' : disableCooling ? 'true' : 'false',
+          disableCooling: disableCooling === undefined ? '' : disableCooling ? 'true' : 'false',
           error: null,
         };
       });
@@ -1654,14 +1674,14 @@ export function AuthFilesPage() {
 
       updateQuotaState(quotaType, (prev) => ({
         ...prev,
-        [file.name]: config.buildLoadingState()
+        [file.name]: config.buildLoadingState(),
       }));
 
       try {
         const data = await config.fetchQuota(file, t);
         updateQuotaState(quotaType, (prev) => ({
           ...prev,
-          [file.name]: config.buildSuccessState(data)
+          [file.name]: config.buildSuccessState(data),
         }));
         showNotification(t('auth_files.quota_refresh_success', { name: file.name }), 'success');
       } catch (err: unknown) {
@@ -1669,7 +1689,7 @@ export function AuthFilesPage() {
         const status = getStatusFromError(err);
         updateQuotaState(quotaType, (prev) => ({
           ...prev,
-          [file.name]: config.buildErrorState(message, status)
+          [file.name]: config.buildErrorState(message, status),
         }));
         showNotification(
           t('auth_files.quota_refresh_failed', { name: file.name, message }),
@@ -1713,7 +1733,7 @@ export function AuthFilesPage() {
         ) : quotaStatus === 'error' ? (
           <div className={styles.quotaError}>
             {t(`${config.i18nPrefix}.load_failed`, {
-              message: quotaErrorMessage
+              message: quotaErrorMessage,
             })}
           </div>
         ) : quota ? (
@@ -1752,9 +1772,7 @@ export function AuthFilesPage() {
         key={item.name}
         className={`${styles.fileCard} ${providerCardClass} ${item.disabled ? styles.fileCardDisabled : ''}`}
       >
-        <div
-          className={styles.fileCardLayout}
-        >
+        <div className={styles.fileCardLayout}>
           <div className={styles.fileCardMain}>
             <div className={styles.cardHeader}>
               <span
@@ -1962,6 +1980,10 @@ export function AuthFilesPage() {
                   }
                 }}
               />
+            </div>
+            <div className={styles.filterItem}>
+              <label>{t('auth_files.sort_by_priority')}</label>
+              <ToggleSwitch checked={sortByPriority} onChange={setSortByPriority} />
             </div>
           </div>
         </div>
