@@ -69,7 +69,7 @@ const serializeProviderKey = (config: ProviderKeyConfig) => {
   if (config.excludedModels && config.excludedModels.length) {
     payload['excluded-models'] = config.excludedModels;
   }
-  if (config.priority !== undefined) payload.priority = config.priority;
+  if (Number.isInteger(config.priority)) payload.priority = config.priority;
   return payload;
 };
 
@@ -94,7 +94,7 @@ const serializeVertexKey = (config: ProviderKeyConfig) => {
   if (headers) payload.headers = headers;
   const models = serializeVertexModelAliases(config.models);
   if (models && models.length) payload.models = models;
-  if (config.priority !== undefined) payload.priority = config.priority;
+  if (Number.isInteger(config.priority)) payload.priority = config.priority;
   return payload;
 };
 
@@ -107,7 +107,7 @@ const serializeGeminiKey = (config: GeminiKeyConfig) => {
   if (config.excludedModels && config.excludedModels.length) {
     payload['excluded-models'] = config.excludedModels;
   }
-  if (config.priority !== undefined) payload.priority = config.priority;
+  if (Number.isInteger(config.priority)) payload.priority = config.priority;
   return payload;
 };
 
@@ -124,7 +124,7 @@ const serializeOpenAIProvider = (provider: OpenAIProviderConfig) => {
   if (headers) payload.headers = headers;
   const models = serializeModelAliases(provider.models);
   if (models && models.length) payload.models = models;
-  if (provider.priority !== undefined) payload.priority = provider.priority;
+  if (Number.isInteger(provider.priority)) payload.priority = provider.priority;
   if (provider.testModel) payload['test-model'] = provider.testModel;
   return payload;
 };

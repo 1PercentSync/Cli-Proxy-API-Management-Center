@@ -34,6 +34,8 @@ const parseIndexParam = (value: string | undefined) => {
   return Number.isFinite(parsed) ? parsed : null;
 };
 
+const INTEGER_STRING_PATTERN = /^[+-]?\d+$/;
+
 export function AiProvidersVertexEditPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -167,7 +169,7 @@ export function AiProvidersVertexEditPage() {
             return { name, alias };
           })
           .filter(Boolean) as ProviderKeyConfig['models'],
-        priority: Number.isFinite(form.priority) ? form.priority : undefined,
+        priority: Number.isInteger(form.priority) ? form.priority : undefined,
       };
 
       const nextList =
@@ -288,10 +290,13 @@ export function AiProvidersVertexEditPage() {
               }
               onChange={(e) => {
                 const raw = e.target.value.trim();
-                const parsed = raw === '' ? undefined : Number(raw);
+                const parsed =
+                  raw !== '' && INTEGER_STRING_PATTERN.test(raw)
+                    ? Number.parseInt(raw, 10)
+                    : undefined;
                 setForm((prev) => ({
                   ...prev,
-                  priority: parsed !== undefined && Number.isFinite(parsed) ? parsed : undefined,
+                  priority: parsed,
                 }));
               }}
               hint={t('ai_providers.priority_hint')}

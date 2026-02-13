@@ -207,7 +207,7 @@
     "prefix_hint": "When set, call models as prefix/<model> to target this entry.",
     "priority_label": "Priority",
     "priority_placeholder": "e.g. 100",
-    "priority_hint": "Higher values mean higher priority. Equal priorities sort by name.",
+    "priority_hint": "Integers only. Higher values mean higher priority. Equal priorities sort by name.",
     "config_toggle_label": "Enabled",
     "config_disabled_badge": "Disabled",
     "codex_title": "Codex API Configuration",

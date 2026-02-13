@@ -37,6 +37,8 @@ const parseIndexParam = (value: string | undefined) => {
   return Number.isFinite(parsed) ? parsed : null;
 };
 
+const INTEGER_STRING_PATTERN = /^[+-]?\d+$/;
+
 export function AiProvidersClaudeEditPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -157,7 +159,7 @@ export function AiProvidersClaudeEditPage() {
           })
           .filter(Boolean) as ProviderKeyConfig['models'],
         excludedModels: parseExcludedModels(form.excludedText),
-        priority: Number.isFinite(form.priority) ? form.priority : undefined,
+        priority: Number.isInteger(form.priority) ? form.priority : undefined,
       };
 
       const nextList =
@@ -274,10 +276,13 @@ export function AiProvidersClaudeEditPage() {
               }
               onChange={(e) => {
                 const raw = e.target.value.trim();
-                const parsed = raw === '' ? undefined : Number(raw);
+                const parsed =
+                  raw !== '' && INTEGER_STRING_PATTERN.test(raw)
+                    ? Number.parseInt(raw, 10)
+                    : undefined;
                 setForm((prev) => ({
                   ...prev,
-                  priority: parsed !== undefined && Number.isFinite(parsed) ? parsed : undefined,
+                  priority: parsed,
                 }));
               }}
               hint={t('ai_providers.priority_hint')}

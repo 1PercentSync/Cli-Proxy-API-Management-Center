@@ -19,6 +19,7 @@ import styles from './AiProvidersPage.module.scss';
 import layoutStyles from './AiProvidersEditLayout.module.scss';
 
 const OPENAI_TEST_TIMEOUT_MS = 30_000;
+const INTEGER_STRING_PATTERN = /^[+-]?\d+$/;
 
 const getErrorMessage = (err: unknown) => {
   if (err instanceof Error) return err.message;
@@ -544,10 +545,13 @@ export function AiProvidersOpenAIEditPage() {
               }
               onChange={(e) => {
                 const raw = e.target.value.trim();
-                const parsed = raw === '' ? undefined : Number(raw);
+                const parsed =
+                  raw !== '' && INTEGER_STRING_PATTERN.test(raw)
+                    ? Number.parseInt(raw, 10)
+                    : undefined;
                 setForm((prev) => ({
                   ...prev,
-                  priority: parsed !== undefined && Number.isFinite(parsed) ? parsed : undefined,
+                  priority: parsed,
                 }));
               }}
               hint={t('ai_providers.priority_hint')}

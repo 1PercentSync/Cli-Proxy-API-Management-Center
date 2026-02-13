@@ -335,7 +335,7 @@ export function AiProvidersOpenAIEditLayout() {
       if (resolvedTestModel) payload.testModel = resolvedTestModel;
       const models = entriesToModels(form.modelEntries);
       if (models.length) payload.models = models;
-      if (Number.isFinite(form.priority)) payload.priority = form.priority;
+      if (Number.isInteger(form.priority)) payload.priority = form.priority;
 
       const nextList =
         editIndex !== null

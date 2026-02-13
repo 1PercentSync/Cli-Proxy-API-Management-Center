@@ -207,7 +207,7 @@
     "prefix_hint": "设置后可用 prefix/<model> 选择该条目。",
     "priority_label": "优先级",
     "priority_placeholder": "例如: 100",
-    "priority_hint": "数值越大优先级越高，相同优先级按名称排序。",
+    "priority_hint": "仅支持整数。数值越大优先级越高，相同优先级按名称排序。",
     "config_toggle_label": "启用",
     "config_disabled_badge": "已停用",
     "codex_title": "Codex API 配置",

@@ -145,7 +145,7 @@ const normalizeProviderKeyConfig = (item: unknown): ProviderKeyConfig | null => 
   const provPriority = record?.priority ?? record?.['priority'];
   if (provPriority !== undefined && provPriority !== null) {
     const parsed = Number(provPriority);
-    if (Number.isFinite(parsed)) config.priority = parsed;
+    if (Number.isInteger(parsed)) config.priority = parsed;
   }
   return config;
 };
@@ -174,7 +174,7 @@ const normalizeGeminiKeyConfig = (item: unknown): GeminiKeyConfig | null => {
   const gemPriority = record?.priority ?? record?.['priority'];
   if (gemPriority !== undefined && gemPriority !== null) {
     const parsed = Number(gemPriority);
-    if (Number.isFinite(parsed)) config.priority = parsed;
+    if (Number.isInteger(parsed)) config.priority = parsed;
   }
   return config;
 };
