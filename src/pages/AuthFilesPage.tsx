@@ -378,6 +378,10 @@ export function AuthFilesPage() {
 
   const [authPriority, setAuthPriority] = useState<Record<string, number>>({});
   const [sortByPriority, setSortByPriority] = useState(true);
+  const [editingPriority, setEditingPriority] = useState<{ name: string; value: string } | null>(
+    null
+  );
+  const [savingPriorityName, setSavingPriorityName] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const loadingKeyStatsRef = useRef(false);
@@ -674,6 +678,52 @@ export function AuthFilesPage() {
       // 静默降级：后端不支持时不弹错误
     }
   }, []);
+
+  const beginEditPriority = useCallback(
+    (name: string) => {
+      if (disableControls) return;
+      setEditingPriority({ name, value: String(authPriority[name] ?? 0) });
+    },
+    [authPriority, disableControls]
+  );
+
+  const cancelEditPriority = useCallback(() => {
+    setEditingPriority(null);
+  }, []);
+
+  const saveEditedPriority = useCallback(async () => {
+    if (!editingPriority) return;
+    const raw = editingPriority.value.trim();
+    if (!INTEGER_STRING_PATTERN.test(raw)) {
+      showNotification(t('auth_files.priority_update_failed'), 'error');
+      return;
+    }
+
+    const nextPriority = Number.parseInt(raw, 10);
+    const targetName = editingPriority.name;
+    setSavingPriorityName(targetName);
+    try {
+      await authFilesApi.updateAuthPriority(targetName, nextPriority);
+      await Promise.all([loadAuthPriority(), loadFiles()]);
+      setEditingPriority(null);
+      showNotification(t('auth_files.priority_updated'), 'success');
+    } catch (err: unknown) {
+      const status = getStatusFromError(err);
+      if (status === 404) {
+        setEditingPriority(null);
+        return;
+      }
+      const message = err instanceof Error ? err.message : '';
+      showNotification(
+        message
+          ? `${t('auth_files.priority_update_failed')}: ${message}`
+          : t('auth_files.priority_update_failed'),
+        'error'
+      );
+    } finally {
+      setSavingPriorityName((prev) => (prev === targetName ? null : prev));
+    }
+  }, [editingPriority, loadAuthPriority, loadFiles, showNotification, t]);
 
   const handleHeaderRefresh = useCallback(async () => {
     await Promise.all([
@@ -1752,6 +1802,9 @@ export function AuthFilesPage() {
     const isAistudio = (item.type || '').toLowerCase() === 'aistudio';
     const showModelsButton = !isRuntimeOnly || isAistudio;
     const typeColor = getTypeColor(item.type || 'unknown');
+    const priorityValue = authPriority[item.name] ?? 0;
+    const isEditingPriority = editingPriority?.name === item.name;
+    const isSavingPriority = savingPriorityName === item.name;
 
     const quotaType =
       quotaFilterType && resolveQuotaType(item) === quotaFilterType ? quotaFilterType : null;
@@ -1795,6 +1848,54 @@ export function AuthFilesPage() {
               <span>
                 {t('auth_files.file_modified')}: {formatModified(item)}
               </span>
+              {!isRuntimeOnly && (
+                <div className={styles.priorityRow}>
+                  <span>{t('common.priority')}:</span>
+                  {isEditingPriority ? (
+                    <div className={styles.priorityEditInline}>
+                      <input
+                        type="number"
+                        className={styles.priorityInput}
+                        value={editingPriority?.value ?? ''}
+                        onChange={(e) =>
+                          setEditingPriority((prev) =>
+                            prev && prev.name === item.name
+                              ? { ...prev, value: e.currentTarget.value }
+                              : prev
+                          )
+                        }
+                        disabled={disableControls || isSavingPriority}
+                      />
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={cancelEditPriority}
+                        disabled={isSavingPriority}
+                      >
+                        {t('common.cancel')}
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => void saveEditedPriority()}
+                        loading={isSavingPriority}
+                        disabled={disableControls || isSavingPriority}
+                      >
+                        {t('common.confirm')}
+                      </Button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      className={styles.priorityValueButton}
+                      onClick={() => beginEditPriority(item.name)}
+                      disabled={disableControls}
+                      title={t('auth_files.click_to_edit_priority')}
+                    >
+                      {priorityValue}
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className={styles.cardStats}>
