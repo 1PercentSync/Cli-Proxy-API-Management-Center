@@ -38,6 +38,7 @@
     "quota_update_required": "请更新 CPA 版本或检查更新",
     "quota_check_credential": "请检查凭证状态",
     "copy": "复制",
+    "priority": "优先级",
     "status": "状态",
     "action": "操作",
     "custom_headers_label": "自定义请求头",
@@ -204,6 +205,9 @@
     "prefix_label": "前缀 (可选):",
     "prefix_placeholder": "例如: team-a",
     "prefix_hint": "设置后可用 prefix/<model> 选择该条目。",
+    "priority_label": "优先级",
+    "priority_placeholder": "例如: 100",
+    "priority_hint": "数值越大优先级越高，相同优先级按名称排序。",
     "config_toggle_label": "启用",
     "config_disabled_badge": "已停用",
     "codex_title": "Codex API 配置",
@@ -438,6 +442,10 @@
     "disable_cooling_hint": "支持布尔值、0/非0 数字或字符串 true/false/1/0；无法解析时忽略。",
     "prefix_proxy_invalid_json": "该认证文件不是 JSON 对象，无法编辑字段。",
     "prefix_proxy_saved_success": "已更新认证文件 \"{{name}}\"",
+    "priority_updated": "优先级已更新",
+    "priority_update_failed": "优先级更新失败",
+    "sort_by_priority": "按优先级排序",
+    "click_to_edit_priority": "点击修改优先级",
     "quota_refresh_success": "已刷新 \"{{name}}\" 的额度",
     "quota_refresh_failed": "刷新 \"{{name}}\" 的额度失败：{{message}}"
   },
@@ -1040,7 +1048,8 @@
     "title": "配额管理",
     "description": "集中查看 OAuth 额度与剩余情况",
     "refresh_files": "刷新认证文件",
-    "refresh_files_and_quota": "刷新认证文件&额度"
+    "refresh_files_and_quota": "刷新认证文件&额度",
+    "sort_by_priority": "按优先级排序"
   },
   "system_info": {
     "title": "管理中心信息",

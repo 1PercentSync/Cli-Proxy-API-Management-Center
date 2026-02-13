@@ -38,6 +38,7 @@
     "quota_update_required": "Пожалуйста, обновите CPA или проверьте наличие обновлений",
     "quota_check_credential": "Пожалуйста, проверьте статус учётных данных",
     "copy": "Копировать",
+    "priority": "Приоритет",
     "status": "Статус",
     "action": "Действие",
     "custom_headers_label": "Пользовательские заголовки",
@@ -204,6 +205,9 @@
     "prefix_label": "Префикс (необязательно):",
     "prefix_placeholder": "например: team-a",
     "prefix_hint": "Если задано, обращайтесь к моделям как prefix/<model>, чтобы выбрать эту запись.",
+    "priority_label": "Приоритет",
+    "priority_placeholder": "например: 100",
+    "priority_hint": "Чем больше значение, тем выше приоритет. При равном приоритете сортировка по имени.",
     "config_toggle_label": "Включено",
     "config_disabled_badge": "Отключено",
     "codex_title": "Конфигурация Codex API",
@@ -438,6 +442,10 @@
     "disable_cooling_hint": "Поддерживает boolean, числа 0/не 0 и строки true/false/1/0; непарсируемые значения игнорируются.",
     "prefix_proxy_invalid_json": "Этот файл авторизации не является JSON-объектом, поэтому поля нельзя редактировать.",
     "prefix_proxy_saved_success": "Файл авторизации \"{{name}}\" успешно обновлён",
+    "priority_updated": "Приоритет обновлён",
+    "priority_update_failed": "Не удалось обновить приоритет",
+    "sort_by_priority": "Сортировать по приоритету",
+    "click_to_edit_priority": "Нажмите для изменения приоритета",
     "card_tools_title": "Инструменты",
     "quota_refresh_single": "Обновить квоту",
     "quota_refresh_hint": "Обновить квоту только для этих учётных данных",
@@ -1045,7 +1053,8 @@
     "title": "Управление квотами",
     "description": "Следите за статусом квот OAuth для учётных данных Antigravity, Codex и Gemini CLI.",
     "refresh_files": "Обновить файлы авторизации",
-    "refresh_files_and_quota": "Обновить файлы и квоты"
+    "refresh_files_and_quota": "Обновить файлы и квоты",
+    "sort_by_priority": "Сортировать по приоритету"
   },
   "system_info": {
     "title": "Информация о центре управления",

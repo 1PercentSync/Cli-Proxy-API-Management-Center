@@ -38,6 +38,7 @@
     "quota_update_required": "Please update the CPA version or check for updates",
     "quota_check_credential": "Please check the credential status",
     "copy": "Copy",
+    "priority": "Priority",
     "status": "Status",
     "action": "Action",
     "custom_headers_label": "Custom Headers",
@@ -204,6 +205,9 @@
     "prefix_label": "Prefix (Optional):",
     "prefix_placeholder": "e.g.: team-a",
     "prefix_hint": "When set, call models as prefix/<model> to target this entry.",
+    "priority_label": "Priority",
+    "priority_placeholder": "e.g. 100",
+    "priority_hint": "Higher values mean higher priority. Equal priorities sort by name.",
     "config_toggle_label": "Enabled",
     "config_disabled_badge": "Disabled",
     "codex_title": "Codex API Configuration",
@@ -438,6 +442,10 @@
     "disable_cooling_hint": "Supports booleans, numeric 0/non-0, and strings like true/false/1/0; unparseable values are ignored.",
     "prefix_proxy_invalid_json": "This auth file is not a JSON object, so fields cannot be edited.",
     "prefix_proxy_saved_success": "Updated auth file \"{{name}}\" successfully",
+    "priority_updated": "Priority updated",
+    "priority_update_failed": "Failed to update priority",
+    "sort_by_priority": "Sort by priority",
+    "click_to_edit_priority": "Click to edit priority",
     "quota_refresh_success": "Quota refreshed for \"{{name}}\"",
     "quota_refresh_failed": "Failed to refresh quota for \"{{name}}\": {{message}}"
   },
@@ -1040,7 +1048,8 @@
     "title": "Quota Management",
     "description": "Monitor OAuth quota status for Antigravity, Codex, and Gemini CLI credentials.",
     "refresh_files": "Refresh auth files",
-    "refresh_files_and_quota": "Refresh files & quota"
+    "refresh_files_and_quota": "Refresh files & quota",
+    "sort_by_priority": "Sort by priority"
   },
   "system_info": {
     "title": "Management Center Info",
