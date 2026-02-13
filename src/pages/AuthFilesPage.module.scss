@@ -559,33 +559,55 @@
 .priorityRow {
   display: flex;
   align-items: center;
-  gap: $spacing-xs;
-  flex-wrap: wrap;
+  gap: $spacing-sm;
+  padding: $spacing-xs 0;
 }
 
-.priorityValueButton {
-  border: 0;
-  background: transparent;
-  color: var(--primary-color);
-  cursor: pointer;
-  padding: 0;
+.priorityLabel {
   font-size: 12px;
-  font-weight: 600;
-}
-
-.priorityEditInline {
-  display: inline-flex;
-  align-items: center;
-  gap: $spacing-xs;
+  color: var(--text-secondary);
+  font-weight: 500;
+  white-space: nowrap;
 }
 
 .priorityInput {
-  width: 80px;
+  width: 72px;
   padding: 4px 8px;
   border: 1px solid var(--border-color);
   border-radius: $radius-sm;
-  background: var(--bg-secondary);
+  background-color: var(--bg-primary);
   color: var(--text-primary);
+  font-size: 13px;
+  text-align: center;
+  transition: border-color $transition-fast;
+
+  &:focus {
+    outline: none;
+    border-color: var(--primary-color);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.priorityValue {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  padding: 4px 8px;
+  border-radius: $radius-sm;
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background-color $transition-fast;
+
+  &:hover {
+    background-color: var(--bg-hover);
+  }
 }
 
 .cardStats {

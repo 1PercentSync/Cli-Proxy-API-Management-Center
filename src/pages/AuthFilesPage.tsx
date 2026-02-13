@@ -377,16 +377,17 @@ export function AuthFilesPage() {
   const [prefixProxyEditor, setPrefixProxyEditor] = useState<PrefixProxyEditorState | null>(null);
 
   const [authPriority, setAuthPriority] = useState<Record<string, number>>({});
+  const [authPriorityError, setAuthPriorityError] = useState<'unsupported' | null>(null);
+  const [savingPriority, setSavingPriority] = useState<string | null>(null);
+  const [editingPriorityFile, setEditingPriorityFile] = useState<string | null>(null);
+  const [editingPriorityValue, setEditingPriorityValue] = useState<number>(0);
   const [sortByPriority, setSortByPriority] = useState(true);
-  const [editingPriority, setEditingPriority] = useState<{ name: string; value: string } | null>(
-    null
-  );
-  const [savingPriorityName, setSavingPriorityName] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const loadingKeyStatsRef = useRef(false);
   const excludedUnsupportedRef = useRef(false);
   const mappingsUnsupportedRef = useRef(false);
+  const authPriorityUnsupportedRef = useRef(false);
   const diagramRef = useRef<ModelMappingDiagramRef | null>(null);
 
   const normalizeProviderKey = (value: string) => value.trim().toLowerCase();
@@ -673,57 +674,69 @@ export function AuthFilesPage() {
   const loadAuthPriority = useCallback(async () => {
     try {
       const res = await authFilesApi.getAuthPriority();
-      setAuthPriority(res);
-    } catch {
-      // 静默降级：后端不支持时不弹错误
-    }
-  }, []);
-
-  const beginEditPriority = useCallback(
-    (name: string) => {
-      if (disableControls) return;
-      setEditingPriority({ name, value: String(authPriority[name] ?? 0) });
-    },
-    [authPriority, disableControls]
-  );
-
-  const cancelEditPriority = useCallback(() => {
-    setEditingPriority(null);
-  }, []);
-
-  const saveEditedPriority = useCallback(async () => {
-    if (!editingPriority) return;
-    const raw = editingPriority.value.trim();
-    if (!INTEGER_STRING_PATTERN.test(raw)) {
-      showNotification(t('auth_files.priority_update_failed'), 'error');
-      return;
-    }
-
-    const nextPriority = Number.parseInt(raw, 10);
-    const targetName = editingPriority.name;
-    setSavingPriorityName(targetName);
-    try {
-      await authFilesApi.updateAuthPriority(targetName, nextPriority);
-      await Promise.all([loadAuthPriority(), loadFiles()]);
-      setEditingPriority(null);
-      showNotification(t('auth_files.priority_updated'), 'success');
+      authPriorityUnsupportedRef.current = false;
+      setAuthPriority(res || {});
+      setAuthPriorityError(null);
     } catch (err: unknown) {
-      const status = getStatusFromError(err);
+      const status =
+        typeof err === 'object' && err !== null && 'status' in err
+          ? (err as { status?: unknown }).status
+          : undefined;
+
       if (status === 404) {
-        setEditingPriority(null);
+        setAuthPriority({});
+        setAuthPriorityError('unsupported');
+        if (!authPriorityUnsupportedRef.current) {
+          authPriorityUnsupportedRef.current = true;
+        }
+      }
+    }
+  }, []);
+
+  const handlePrioritySave = useCallback(
+    async (name: string) => {
+      if (authPriorityError === 'unsupported') return;
+      const currentValue = authPriority[name] ?? 0;
+      if (editingPriorityValue === currentValue) {
+        setEditingPriorityFile(null);
         return;
       }
-      const message = err instanceof Error ? err.message : '';
-      showNotification(
-        message
-          ? `${t('auth_files.priority_update_failed')}: ${message}`
-          : t('auth_files.priority_update_failed'),
-        'error'
-      );
-    } finally {
-      setSavingPriorityName((prev) => (prev === targetName ? null : prev));
-    }
-  }, [editingPriority, loadAuthPriority, loadFiles, showNotification, t]);
+
+      setSavingPriority(name);
+      try {
+        await authFilesApi.updateAuthPriority(name, editingPriorityValue);
+        await loadAuthPriority();
+        setEditingPriorityFile(null);
+        showNotification(t('auth_files.priority_updated'), 'success');
+      } catch (err: unknown) {
+        const status =
+          typeof err === 'object' && err !== null && 'status' in err
+            ? (err as { status?: unknown }).status
+            : undefined;
+
+        if (status === 404) {
+          setAuthPriorityError('unsupported');
+          authPriorityUnsupportedRef.current = true;
+          return;
+        }
+
+        const errorMessage = err instanceof Error ? err.message : '';
+        showNotification(`${t('auth_files.priority_update_failed')}: ${errorMessage}`, 'error');
+      } finally {
+        setSavingPriority(null);
+      }
+    },
+    [authPriority, authPriorityError, editingPriorityValue, loadAuthPriority, showNotification, t]
+  );
+
+  const handlePriorityCancel = useCallback(() => {
+    setEditingPriorityFile(null);
+  }, []);
+
+  const handlePriorityEdit = useCallback((name: string, currentPriority: number) => {
+    setEditingPriorityFile(name);
+    setEditingPriorityValue(currentPriority);
+  }, []);
 
   const handleHeaderRefresh = useCallback(async () => {
     await Promise.all([
@@ -1802,9 +1815,8 @@ export function AuthFilesPage() {
     const isAistudio = (item.type || '').toLowerCase() === 'aistudio';
     const showModelsButton = !isRuntimeOnly || isAistudio;
     const typeColor = getTypeColor(item.type || 'unknown');
-    const priorityValue = authPriority[item.name] ?? 0;
-    const isEditingPriority = editingPriority?.name === item.name;
-    const isSavingPriority = savingPriorityName === item.name;
+    const currentPriority = authPriority[item.name] ?? 0;
+    const isPrioritySaving = savingPriority === item.name;
 
     const quotaType =
       quotaFilterType && resolveQuotaType(item) === quotaFilterType ? quotaFilterType : null;
@@ -1848,51 +1860,48 @@ export function AuthFilesPage() {
               <span>
                 {t('auth_files.file_modified')}: {formatModified(item)}
               </span>
-              {!isRuntimeOnly && (
+              {!isRuntimeOnly && authPriorityError !== 'unsupported' && (
                 <div className={styles.priorityRow}>
-                  <span>{t('common.priority')}:</span>
-                  {isEditingPriority ? (
-                    <div className={styles.priorityEditInline}>
+                  <label className={styles.priorityLabel}>{t('common.priority')}</label>
+                  {editingPriorityFile === item.name ? (
+                    <>
                       <input
                         type="number"
                         className={styles.priorityInput}
-                        value={editingPriority?.value ?? ''}
-                        onChange={(e) =>
-                          setEditingPriority((prev) =>
-                            prev && prev.name === item.name
-                              ? { ...prev, value: e.currentTarget.value }
-                              : prev
-                          )
-                        }
-                        disabled={disableControls || isSavingPriority}
+                        value={editingPriorityValue}
+                        onChange={(e) => {
+                          const value = Number.parseInt(e.target.value, 10);
+                          setEditingPriorityValue(Number.isFinite(value) ? value : 0);
+                        }}
+                        disabled={isPrioritySaving}
+                        autoFocus
                       />
                       <Button
+                        variant="primary"
                         size="sm"
-                        variant="secondary"
-                        onClick={cancelEditPriority}
-                        disabled={isSavingPriority}
-                      >
-                        {t('common.cancel')}
-                      </Button>
-                      <Button
-                        size="sm"
-                        onClick={() => void saveEditedPriority()}
-                        loading={isSavingPriority}
-                        disabled={disableControls || isSavingPriority}
+                        onClick={() => void handlePrioritySave(item.name)}
+                        disabled={isPrioritySaving}
+                        loading={isPrioritySaving}
                       >
                         {t('common.confirm')}
                       </Button>
-                    </div>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={handlePriorityCancel}
+                        disabled={isPrioritySaving}
+                      >
+                        {t('common.cancel')}
+                      </Button>
+                    </>
                   ) : (
-                    <button
-                      type="button"
-                      className={styles.priorityValueButton}
-                      onClick={() => beginEditPriority(item.name)}
-                      disabled={disableControls}
+                    <span
+                      className={styles.priorityValue}
+                      onClick={() => handlePriorityEdit(item.name, currentPriority)}
                       title={t('auth_files.click_to_edit_priority')}
                     >
-                      {priorityValue}
-                    </button>
+                      {currentPriority}
+                    </span>
                   )}
                 </div>
               )}
@@ -2082,10 +2091,15 @@ export function AuthFilesPage() {
                 }}
               />
             </div>
-            <div className={styles.filterItem}>
-              <label>{t('auth_files.sort_by_priority')}</label>
-              <ToggleSwitch checked={sortByPriority} onChange={setSortByPriority} />
-            </div>
+            {authPriorityError !== 'unsupported' && (
+              <div className={styles.filterItem}>
+                <ToggleSwitch
+                  checked={sortByPriority}
+                  onChange={setSortByPriority}
+                  label={t('auth_files.sort_by_priority')}
+                />
+              </div>
+            )}
           </div>
         </div>
 
