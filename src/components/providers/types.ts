@@ -9,13 +9,13 @@ export interface ModelEntry {
 
 export interface OpenAIFormState {
   name: string;
+  priority?: number;
   prefix: string;
   baseUrl: string;
   headers: HeaderEntry[];
   testModel?: string;
   modelEntries: ModelEntry[];
   apiKeyEntries: ApiKeyEntry[];
-  priority?: number;
 }
 
 export interface AmpcodeFormState {
@@ -25,8 +25,9 @@ export interface AmpcodeFormState {
   mappingEntries: ModelEntry[];
 }
 
-export type GeminiFormState = Omit<GeminiKeyConfig, 'headers'> & {
+export type GeminiFormState = Omit<GeminiKeyConfig, 'headers' | 'models'> & {
   headers: HeaderEntry[];
+  modelEntries: ModelEntry[];
   excludedText: string;
 };
 

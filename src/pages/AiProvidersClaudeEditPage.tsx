@@ -7,12 +7,13 @@ import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { HeaderInputList } from '@/components/ui/HeaderInputList';
 import { ModelInputList } from '@/components/ui/ModelInputList';
+import { ToggleSwitch } from '@/components/ui/ToggleSwitch';
 import { useEdgeSwipeBack } from '@/hooks/useEdgeSwipeBack';
 import { SecondaryScreenShell } from '@/components/common/SecondaryScreenShell';
 import { apiCallApi, getApiCallErrorMessage } from '@/services/api';
 import { useNotificationStore } from '@/stores';
 import { buildHeaderObject } from '@/utils/headers';
-import { buildClaudeMessagesEndpoint } from '@/components/providers/utils';
+import { buildClaudeMessagesEndpoint, parseTextList } from '@/components/providers/utils';
 import type { ClaudeEditOutletContext } from './AiProvidersClaudeEditLayout';
 import styles from './AiProvidersPage.module.scss';
 import layoutStyles from './AiProvidersEditLayout.module.scss';
@@ -72,6 +73,7 @@ export function AiProvidersClaudeEditPage() {
 
   const swipeRef = useEdgeSwipeBack({ onBack: handleBack });
   const [isTesting, setIsTesting] = useState(false);
+  const lastCloakConfigRef = useRef<typeof form.cloak>(null);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -82,6 +84,11 @@ export function AiProvidersClaudeEditPage() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleBack]);
+
+  useEffect(() => {
+    if (!form.cloak) return;
+    lastCloakConfigRef.current = form.cloak;
+  }, [form.cloak]);
 
   const canSave =
     !disableControls && !loading && !saving && !invalidIndexParam && !invalidIndex && !isTesting;
@@ -100,6 +107,23 @@ export function AiProvidersClaudeEditPage() {
       return acc;
     }, []);
   }, [form.modelEntries]);
+
+  const cloakModeOptions = useMemo(
+    () => [
+      { value: 'auto', label: t('ai_providers.claude_cloak_mode_auto') },
+      { value: 'always', label: t('ai_providers.claude_cloak_mode_always') },
+      { value: 'never', label: t('ai_providers.claude_cloak_mode_never') },
+    ],
+    [t]
+  );
+
+  const resolvedCloakMode = useMemo(() => {
+    const mode = (form.cloak?.mode ?? '').trim().toLowerCase();
+    if (!mode) return 'auto';
+    if (mode === 'provider') return 'auto';
+    if (mode === 'auto' || mode === 'always' || mode === 'never') return mode;
+    return 'auto';
+  }, [form.cloak?.mode]);
 
   const connectivityConfigSignature = useMemo(() => {
     const headersSignature = form.headers
@@ -250,10 +274,28 @@ export function AiProvidersClaudeEditPage() {
       onBack={handleBack}
       backLabel={t('common.back')}
       backAriaLabel={t('common.back')}
-      rightAction={
-        <Button size="sm" onClick={() => void handleSave()} loading={saving} disabled={!canSave}>
-          {t('common.save')}
-        </Button>
+      hideTopBarBackButton
+      hideTopBarRightAction
+      floatingAction={
+        <div className={layoutStyles.floatingActions}>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={handleBack}
+            className={layoutStyles.floatingBackButton}
+          >
+            {t('common.back')}
+          </Button>
+          <Button
+            size="sm"
+            onClick={() => void handleSave()}
+            loading={saving}
+            disabled={!canSave}
+            className={layoutStyles.floatingSaveButton}
+          >
+            {t('common.save')}
+          </Button>
+        </div>
       }
       isLoading={loading}
       loadingLabel={t('common.loading')}
@@ -267,6 +309,25 @@ export function AiProvidersClaudeEditPage() {
               label={t('ai_providers.claude_add_modal_key_label')}
               value={form.apiKey}
               onChange={(e) => setForm((prev) => ({ ...prev, apiKey: e.target.value }))}
+              disabled={saving || disableControls || isTesting}
+            />
+            <Input
+              label={t('ai_providers.priority_label')}
+              hint={t('ai_providers.priority_hint')}
+              type="number"
+              step={1}
+              value={form.priority ?? ''}
+              onChange={(e) => {
+                const raw = e.target.value.trim();
+                const parsed =
+                  raw !== '' && INTEGER_STRING_PATTERN.test(raw)
+                    ? Number.parseInt(raw, 10)
+                    : undefined;
+                setForm((prev) => ({
+                  ...prev,
+                  priority: parsed,
+                }));
+              }}
               disabled={saving || disableControls || isTesting}
             />
             <Input
@@ -302,7 +363,9 @@ export function AiProvidersClaudeEditPage() {
 
             <div className={styles.modelConfigSection}>
               <div className={styles.modelConfigHeader}>
-                <label className={styles.modelConfigTitle}>{t('ai_providers.claude_models_label')}</label>
+                <label className={styles.modelConfigTitle}>
+                  {t('ai_providers.claude_models_label')}
+                </label>
                 <div className={styles.modelConfigToolbar}>
                   <Button
                     variant="secondary"
@@ -347,7 +410,9 @@ export function AiProvidersClaudeEditPage() {
 
               <div className={styles.modelTestPanel}>
                 <div className={styles.modelTestMeta}>
-                  <label className={styles.modelTestLabel}>{t('ai_providers.claude_test_title')}</label>
+                  <label className={styles.modelTestLabel}>
+                    {t('ai_providers.claude_test_title')}
+                  </label>
                   <span className={styles.modelTestHint}>{t('ai_providers.claude_test_hint')}</span>
                 </div>
                 <div className={styles.modelTestControls}>
@@ -407,27 +472,6 @@ export function AiProvidersClaudeEditPage() {
                 </div>
               )}
             </div>
-            <Input
-              label={t('ai_providers.priority_label')}
-              placeholder={t('ai_providers.priority_placeholder')}
-              type="number"
-              value={
-                form.priority !== undefined && form.priority !== null ? String(form.priority) : ''
-              }
-              onChange={(e) => {
-                const raw = e.target.value.trim();
-                const parsed =
-                  raw !== '' && INTEGER_STRING_PATTERN.test(raw)
-                    ? Number.parseInt(raw, 10)
-                    : undefined;
-                setForm((prev) => ({
-                  ...prev,
-                  priority: parsed,
-                }));
-              }}
-              hint={t('ai_providers.priority_hint')}
-              disabled={disableControls || saving}
-            />
             <div className="form-group">
               <label>{t('ai_providers.excluded_models_label')}</label>
               <textarea
@@ -439,6 +483,116 @@ export function AiProvidersClaudeEditPage() {
                 disabled={saving || disableControls || isTesting}
               />
               <div className="hint">{t('ai_providers.excluded_models_hint')}</div>
+            </div>
+
+            <div className={styles.modelConfigSection}>
+              <div className={styles.modelConfigHeader}>
+                <label className={styles.modelConfigTitle}>
+                  {t('ai_providers.claude_cloak_title')}
+                </label>
+                <div className={styles.modelConfigToolbar}>
+                  <ToggleSwitch
+                    checked={Boolean(form.cloak)}
+                    onChange={(enabled) =>
+                      setForm((prev) => {
+                        if (!enabled) {
+                          if (prev.cloak) {
+                            lastCloakConfigRef.current = prev.cloak;
+                          }
+                          return { ...prev, cloak: undefined };
+                        }
+
+                        const restored = prev.cloak ??
+                          lastCloakConfigRef.current ?? {
+                            mode: 'auto',
+                            strictMode: false,
+                            sensitiveWords: [],
+                          };
+                        const mode = String(restored.mode ?? 'auto').trim() || 'auto';
+                        return {
+                          ...prev,
+                          cloak: {
+                            mode,
+                            strictMode: restored.strictMode ?? false,
+                            sensitiveWords: restored.sensitiveWords ?? [],
+                          },
+                        };
+                      })
+                    }
+                    disabled={saving || disableControls || isTesting}
+                    ariaLabel={t('ai_providers.claude_cloak_toggle_aria')}
+                    label={t('ai_providers.claude_cloak_toggle_label')}
+                  />
+                </div>
+              </div>
+              <div className={styles.sectionHint}>{t('ai_providers.claude_cloak_hint')}</div>
+
+              {form.cloak ? (
+                <>
+                  <div className="form-group">
+                    <label>{t('ai_providers.claude_cloak_mode_label')}</label>
+                    <Select
+                      value={resolvedCloakMode}
+                      options={cloakModeOptions}
+                      onChange={(value) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          cloak: {
+                            ...(prev.cloak ?? {}),
+                            mode: value,
+                          },
+                        }))
+                      }
+                      ariaLabel={t('ai_providers.claude_cloak_mode_label')}
+                      disabled={saving || disableControls || isTesting}
+                    />
+                    <div className="hint">{t('ai_providers.claude_cloak_mode_hint')}</div>
+                  </div>
+
+                  <div className="form-group">
+                    <label>{t('ai_providers.claude_cloak_strict_label')}</label>
+                    <ToggleSwitch
+                      checked={Boolean(form.cloak.strictMode)}
+                      onChange={(value) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          cloak: {
+                            ...(prev.cloak ?? {}),
+                            strictMode: value,
+                          },
+                        }))
+                      }
+                      disabled={saving || disableControls || isTesting}
+                      ariaLabel={t('ai_providers.claude_cloak_strict_label')}
+                    />
+                    <div className="hint">{t('ai_providers.claude_cloak_strict_hint')}</div>
+                  </div>
+
+                  <div className="form-group">
+                    <label>{t('ai_providers.claude_cloak_sensitive_words_label')}</label>
+                    <textarea
+                      className="input"
+                      placeholder={t('ai_providers.claude_cloak_sensitive_words_placeholder')}
+                      value={(form.cloak.sensitiveWords ?? []).join('\n')}
+                      onChange={(e) => {
+                        const nextWords = parseTextList(e.target.value);
+                        setForm((prev) => ({
+                          ...prev,
+                          cloak: {
+                            ...(prev.cloak ?? {}),
+                            sensitiveWords: nextWords.length ? nextWords : undefined,
+                          },
+                        }));
+                      }}
+                      rows={3}
+                      disabled={saving || disableControls || isTesting}
+                    />
+                    <div className="hint">
+                      {t('ai_providers.claude_cloak_sensitive_words_hint')}
+                    </div>
+                  </div>
+                </>
+              ) : null}
             </div>
           </div>
         )}

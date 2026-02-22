@@ -1,5 +1,6 @@
 import type {
   ApiKeyEntry,
+  CloakConfig,
   GeminiKeyConfig,
   ModelAlias,
   OpenAIProviderConfig,
@@ -125,11 +126,20 @@ const normalizeProviderKeyConfig = (item: unknown): ProviderKeyConfig | null => 
   if (!trimmed) return null;
 
   const config: ProviderKeyConfig = { apiKey: trimmed };
+  const priority = record?.priority ?? record?.['priority'];
+  if (priority !== undefined && priority !== null && String(priority).trim() !== '') {
+    const parsed = Number(priority);
+    if (Number.isInteger(parsed)) {
+      config.priority = parsed;
+    }
+  }
   const prefix = normalizePrefix(record?.prefix ?? record?.['prefix']);
   if (prefix) config.prefix = prefix;
   const baseUrl = record ? (record['base-url'] ?? record.baseUrl) : undefined;
   const proxyUrl = record ? (record['proxy-url'] ?? record.proxyUrl) : undefined;
   if (baseUrl) config.baseUrl = String(baseUrl);
+  const websockets = normalizeBoolean(record?.websockets ?? record?.['websockets']);
+  if (websockets !== undefined) config.websockets = websockets;
   if (proxyUrl) config.proxyUrl = String(proxyUrl);
   const headers = normalizeHeaders(record?.headers);
   if (headers) config.headers = headers;
@@ -142,11 +152,31 @@ const normalizeProviderKeyConfig = (item: unknown): ProviderKeyConfig | null => 
       record?.excluded_models
   );
   if (excludedModels.length) config.excludedModels = excludedModels;
-  const provPriority = record?.priority ?? record?.['priority'];
-  if (provPriority !== undefined && provPriority !== null) {
-    const parsed = Number(provPriority);
-    if (Number.isInteger(parsed)) config.priority = parsed;
+
+  const cloakRaw = record?.cloak;
+  if (isRecord(cloakRaw)) {
+    const cloak: CloakConfig = {};
+    const mode = cloakRaw.mode ?? cloakRaw['mode'];
+    if (typeof mode === 'string' && mode.trim()) {
+      cloak.mode = mode.trim();
+    }
+    const strictMode = normalizeBoolean(
+      cloakRaw['strict-mode'] ?? cloakRaw.strictMode ?? cloakRaw.strict_mode
+    );
+    if (strictMode !== undefined) {
+      cloak.strictMode = strictMode;
+    }
+    const sensitiveWords = normalizeExcludedModels(
+      cloakRaw['sensitive-words'] ?? cloakRaw.sensitiveWords ?? cloakRaw.sensitive_words
+    );
+    if (sensitiveWords.length) {
+      cloak.sensitiveWords = sensitiveWords;
+    }
+    if (Object.keys(cloak).length) {
+      config.cloak = cloak;
+    }
   }
+
   return config;
 };
 
@@ -161,23 +191,29 @@ const normalizeGeminiKeyConfig = (item: unknown): GeminiKeyConfig | null => {
   if (!trimmed) return null;
 
   const config: GeminiKeyConfig = { apiKey: trimmed };
+  const priority = record?.priority ?? record?.['priority'];
+  if (priority !== undefined && priority !== null && String(priority).trim() !== '') {
+    const parsed = Number(priority);
+    if (Number.isInteger(parsed)) {
+      config.priority = parsed;
+    }
+  }
   const prefix = normalizePrefix(record?.prefix ?? record?.['prefix']);
   if (prefix) config.prefix = prefix;
   const baseUrl = record ? (record['base-url'] ?? record.baseUrl ?? record['base_url']) : undefined;
   if (baseUrl) config.baseUrl = String(baseUrl);
-  const proxyUrl = record ? record['proxy-url'] ?? record.proxyUrl ?? record['proxy_url'] : undefined;
+  const proxyUrl = record
+    ? (record['proxy-url'] ?? record.proxyUrl ?? record['proxy_url'])
+    : undefined;
   if (proxyUrl) config.proxyUrl = String(proxyUrl);
+  const models = normalizeModelAliases(record?.models);
+  if (models.length) config.models = models;
   const headers = normalizeHeaders(record?.headers);
   if (headers) config.headers = headers;
   const excludedModels = normalizeExcludedModels(
     record?.['excluded-models'] ?? record?.excludedModels
   );
   if (excludedModels.length) config.excludedModels = excludedModels;
-  const gemPriority = record?.priority ?? record?.['priority'];
-  if (gemPriority !== undefined && gemPriority !== null) {
-    const parsed = Number(gemPriority);
-    if (Number.isInteger(parsed)) config.priority = parsed;
-  }
   return config;
 };
 

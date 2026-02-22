@@ -518,10 +518,28 @@ export function AiProvidersOpenAIEditPage() {
       onBack={handleBack}
       backLabel={t('common.back')}
       backAriaLabel={t('common.back')}
-      rightAction={
-        <Button size="sm" onClick={() => void handleSave()} loading={saving} disabled={!canSave}>
-          {t('common.save')}
-        </Button>
+      hideTopBarBackButton
+      hideTopBarRightAction
+      floatingAction={
+        <div className={layoutStyles.floatingActions}>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={handleBack}
+            className={layoutStyles.floatingBackButton}
+          >
+            {t('common.back')}
+          </Button>
+          <Button
+            size="sm"
+            onClick={() => void handleSave()}
+            loading={saving}
+            disabled={!canSave}
+            className={layoutStyles.floatingSaveButton}
+          >
+            {t('common.save')}
+          </Button>
+        </div>
       }
       isLoading={loading}
       loadingLabel={t('common.loading')}
@@ -538,26 +556,11 @@ export function AiProvidersOpenAIEditPage() {
               disabled={saving || disableControls || isTestingKeys}
             />
             <Input
-              label={t('ai_providers.prefix_label')}
-              placeholder={t('ai_providers.prefix_placeholder')}
-              value={form.prefix ?? ''}
-              onChange={(e) => setForm((prev) => ({ ...prev, prefix: e.target.value }))}
-              hint={t('ai_providers.prefix_hint')}
-              disabled={saving || disableControls || isTestingKeys}
-            />
-            <Input
-              label={t('ai_providers.openai_add_modal_url_label')}
-              value={form.baseUrl}
-              onChange={(e) => setForm((prev) => ({ ...prev, baseUrl: e.target.value }))}
-              disabled={saving || disableControls || isTestingKeys}
-            />
-            <Input
               label={t('ai_providers.priority_label')}
-              placeholder={t('ai_providers.priority_placeholder')}
+              hint={t('ai_providers.priority_hint')}
               type="number"
-              value={
-                form.priority !== undefined && form.priority !== null ? String(form.priority) : ''
-              }
+              step={1}
+              value={form.priority ?? ''}
               onChange={(e) => {
                 const raw = e.target.value.trim();
                 const parsed =
@@ -569,7 +572,20 @@ export function AiProvidersOpenAIEditPage() {
                   priority: parsed,
                 }));
               }}
-              hint={t('ai_providers.priority_hint')}
+              disabled={saving || disableControls || isTestingKeys}
+            />
+            <Input
+              label={t('ai_providers.prefix_label')}
+              placeholder={t('ai_providers.prefix_placeholder')}
+              value={form.prefix ?? ''}
+              onChange={(e) => setForm((prev) => ({ ...prev, prefix: e.target.value }))}
+              hint={t('ai_providers.prefix_hint')}
+              disabled={saving || disableControls || isTestingKeys}
+            />
+            <Input
+              label={t('ai_providers.openai_add_modal_url_label')}
+              value={form.baseUrl}
+              onChange={(e) => setForm((prev) => ({ ...prev, baseUrl: e.target.value }))}
               disabled={saving || disableControls || isTestingKeys}
             />
 
@@ -661,7 +677,13 @@ export function AiProvidersOpenAIEditPage() {
                     }
                     className={styles.openaiTestSelect}
                     ariaLabel={t('ai_providers.openai_test_title')}
-                    disabled={saving || disableControls || isTestingKeys || testStatus === 'loading' || availableModels.length === 0}
+                    disabled={
+                      saving ||
+                      disableControls ||
+                      isTestingKeys ||
+                      testStatus === 'loading' ||
+                      availableModels.length === 0
+                    }
                   />
                   <Button
                     variant={testStatus === 'error' ? 'danger' : 'secondary'}
@@ -700,7 +722,9 @@ export function AiProvidersOpenAIEditPage() {
 
             <div className={styles.keyEntriesSection}>
               <div className={styles.keyEntriesHeader}>
-                <label className={styles.keyEntriesTitle}>{t('ai_providers.openai_add_modal_keys_label')}</label>
+                <label className={styles.keyEntriesTitle}>
+                  {t('ai_providers.openai_add_modal_keys_label')}
+                </label>
                 <span className={styles.keyEntriesHint}>{t('ai_providers.openai_keys_hint')}</span>
               </div>
               {renderKeyEntries(form.apiKeyEntries)}
